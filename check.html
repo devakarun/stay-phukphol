@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>ตรวจสอบระบบ · Stay @Phukphol</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f8f4ec; color: #2b2a24; margin: 0; padding: 24px 16px; line-height: 1.6; }
+    .box { max-width: 640px; margin: 0 auto; display: grid; gap: 14px; }
+    h1 { color: #2e4a2c; font-size: 1.5rem; margin: 0; }
+    .row { background: #fff; border: 1px solid rgba(46,74,44,.15); border-radius: 14px; padding: 14px 16px; font-size: 1.05rem; }
+    .row b { display: block; font-size: 1.25rem; margin-top: 2px; }
+    .ok b { color: #3e6a2a; } .bad b { color: #b0402a; } .wait b { color: #8a7a55; }
+    .tip { background: #fff6dc; border: 1px solid #e6b832; border-radius: 14px; padding: 14px 16px; }
+    .tip.good { background: #eef1e3; border-color: #9db27e; }
+    small { color: #6f6a5c; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>ตรวจสอบระบบจอง</h1>
+    <div class="row wait" id="r1">โปรเจกต์ Firebase ที่เว็บใช้<b>กำลังตรวจ...</b></div>
+    <div class="row wait" id="r2">ทดสอบ 1: อ่านข้อมูลห้องว่าง (กฎชุดเก่าก็ผ่าน)<b>กำลังตรวจ...</b></div>
+    <div class="row wait" id="r3">ทดสอบ 2: อ่านข้อมูลระบบชำระเงิน (ต้องใช้กฎชุดใหม่)<b>กำลังตรวจ...</b></div>
+    <div class="tip" id="tip">กำลังตรวจ...</div>
+    <small>หน้านี้แค่ลองอ่านข้อมูล ไม่ได้บันทึกหรือเปลี่ยนอะไร · <span id="time"></span></small>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const set = (id, cls, text) => { const el = $(id); el.className = "row " + cls; el.querySelector("b").textContent = text; };
+    $("time").textContent = new Date().toLocaleString("th-TH");
+    (async () => {
+      let pid = "-";
+      try {
+        firebase.initializeApp(window.SP_CONFIG.firebase);
+        pid = firebase.app().options.projectId;
+        set("r1", "ok", pid);
+      } catch (e) { set("r1", "bad", "เชื่อม Firebase ไม่ได้: " + e.message); }
+      const db = firebase.firestore();
+      let t1 = false, t2 = false, e2 = "";
+      try { await db.collection("roomNights").limit(1).get(); t1 = true; set("r2", "ok", "✅ ผ่าน"); }
+      catch (e) { set("r2", "bad", "❌ ไม่ผ่าน (" + e.code + ")"); }
+      try { await db.collection("guestView").doc("TEST-0000").get(); t2 = true; set("r3", "ok", "✅ ผ่าน"); }
+      catch (e) { e2 = e.code; set("r3", "bad", "❌ ไม่ผ่าน (" + e.code + ")"); }
+      const tip = $("tip");
+      if (t1 && t2) { tip.className = "tip good"; tip.innerHTML = "<b>✅ กฎชุดใหม่ทำงานแล้ว</b><br>ระบบจองควรใช้งานได้ ลองจองใหม่อีกครั้ง (กด Cmd + Shift + R ก่อน)"; }
+      else if (t1 && !t2) { tip.innerHTML = "<b>⚠️ Firebase ยังใช้กฎชุดเก่าอยู่</b><br>โปรเจกต์ที่เว็บใช้คือ <b>" + pid + "</b><br>ให้เปิด Firebase ของโปรเจกต์ชื่อนี้ → Firestore Database → Rules แล้ววางกฎชุดใหม่ → กด Publish"; }
+      else { tip.innerHTML = "<b>❌ เว็บเชื่อมต่อฐานข้อมูลไม่ได้</b><br>ส่งภาพหน้านี้ให้ Claude ดูได้เลย"; }
+    })();
+  </script>
+</body>
+</html>

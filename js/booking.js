@@ -282,7 +282,7 @@
       if (ex.message === "ROOM_TAKEN") {
         goStep(1); S.rooms = [];
         search("มีผู้จองห้องที่เลือกไปก่อนหน้าเพียงไม่กี่วินาที ระบบเลือกห้องใหม่ให้แล้ว");
-      } else err.textContent = "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อเราทางโทรศัพท์" + (ex.code ? " (" + ex.code + ")" : "");
+      } else err.textContent = "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อเราทางโทรศัพท์" + (ex.code ? " (" + String(ex.code).replace(/^firestore\//, "") + ")" : "");
     } finally { btn.disabled = false; btn.textContent = "ไปขั้นตอนชำระเงิน →"; }
   });
   $("#btnSubmit").textContent = "ไปขั้นตอนชำระเงิน →";

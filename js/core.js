@@ -117,9 +117,13 @@
           const code = U.makeCode(), key = U.guestKey(code, data.phone);
           const ref = fs.collection("bookings").doc(), gref = fs.collection("guestView").doc(key);
           const b = Object.assign({}, data, { code, guestKey: key, payment: "unpaid" });
+          const tag = (e, where) => { e.code = (e.code || e.message) + " @" + where; return e; };
+          let exists;
+          try { exists = (await gref.get()).exists; } catch (e) { throw tag(e, "check-code"); }
+          if (exists) continue;
+          // ช่วงที่ 1: กันห้อง + บันทึกการจอง (รวดเดียว ป้องกันการจองซ้อน)
           try {
             await fs.runTransaction(async (tx) => {
-              if ((await tx.get(gref)).exists) throw new Error("CODE_TAKEN");
               const refs = [];
               data.rooms.forEach((room) => nights.forEach((date) =>
                 refs.push({ ref: fs.collection("roomNights").doc(date + "_" + room), date, room })));
@@ -127,10 +131,12 @@
               if (snaps.some((s) => s.exists)) throw new Error("ROOM_TAKEN");
               refs.forEach((r) => tx.set(r.ref, { date: r.date, room: r.room, bookingId: ref.id }));
               tx.set(ref, Object.assign({}, b, { createdAt: now() }));
-              tx.set(gref, Object.assign(viewOf(b, ref.id, key), { createdAt: now() }));
             });
-            return { id: ref.id, code, key, booking: b };
-          } catch (e) { if (e.message !== "CODE_TAKEN") throw e; }
+          } catch (e) { if (e.message === "ROOM_TAKEN") throw e; throw tag(e, "booking"); }
+          // ช่วงที่ 2: ข้อมูลที่ลูกค้าเปิดดูได้ด้วยรหัส
+          try { await gref.set(Object.assign(viewOf(b, ref.id, key), { createdAt: now() })); }
+          catch (e) { console.error("guestView", e); throw tag(e, "guest-view"); }
+          return { id: ref.id, code, key, booking: b };
         }
         throw new Error("CODE_FAIL");
       },

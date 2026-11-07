@@ -27,7 +27,7 @@ service cloud.firestore {
     match /bookings/{id} {
       allow create: if request.resource.data.status == 'pending'
         && request.resource.data.payment == 'unpaid'
-        && !('doorCode' in request.resource.data)
+        && !request.resource.data.keys().hasAny(['doorCode'])
         && request.resource.data.code is string && request.resource.data.code.size() == 4
         && request.resource.data.guestKey is string
         && request.resource.data.name is string && request.resource.data.name.size() < 120
@@ -51,7 +51,8 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if request.resource.data.state == 'awaiting_payment'
         && request.resource.data.keys().hasOnly(['bookingId', 'code', 'state', 'total', 'checkIn', 'checkOut', 'nights', 'rooms', 'rateName', 'createdAt'])
-        && existsAfter(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId));
+        && request.resource.data.code is string
+        && exists(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId));
       allow update: if isAdmin()
         || (resource.data.state == 'awaiting_payment'
             && request.resource.data.state == 'slip'

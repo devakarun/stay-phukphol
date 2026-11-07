@@ -7,14 +7,14 @@ window.SP_CONFIG = {
      คัดลอกค่าจาก Firebase Console > Project settings > Your apps
      ถ้ายังไม่ใส่ (apiKey ยังเป็น "PASTE_...") เว็บจะทำงานใน "โหมดทดลอง"
      ซึ่งเก็บข้อมูลไว้ในเบราว์เซอร์เครื่องตัวเองเท่านั้น */
-  firebase: {
-    apiKey: "PASTE_YOUR_API_KEY",
-    authDomain: "your-project.firebaseapp.com",
-    projectId: "your-project",
-    storageBucket: "your-project.appspot.com",
-    messagingSenderId: "000000000000",
-    appId: "1:000000000000:web:xxxxxxxxxxxx"
-  },
+const firebaseConfig = {
+  apiKey: "AIzaSyAvvnRvte_3NhbnyThyyLTvuvMVHbc2brM",
+  authDomain: "stay-phukphol.firebaseapp.com",
+  projectId: "stay-phukphol",
+  storageBucket: "stay-phukphol.firebasestorage.app",
+  messagingSenderId: "591908998524",
+  appId: "1:591908998524:web:6be4fc059f3f64733028f9"
+};
 
   /* ---------- 2) อีเมลแอดมิน ----------
      อีเมลที่อนุญาตให้เข้า Dashboard (ต้องตรงกับใน firestore.rules ด้วย) */

@@ -74,8 +74,9 @@ h3 { font-size: 1.6rem; }
 
 /* ---------- Hero ---------- */
 .hero { position: relative; min-height: 100svh; display: grid; place-items: center; text-align: center; color: #fff; overflow: hidden; }
-.hero__bg { position: absolute; inset: -6% 0; background-size: cover; background-position: center; transform: scale(1.06); will-change: transform; }
-.hero__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(30, 40, 24, .45), rgba(30, 40, 24, .25) 40%, rgba(30, 36, 22, .65)); }
+.hero__bg { position: absolute; inset: -6% 0; background-size: cover; background-position: 50% center; transform: scale(1.06); will-change: transform; }
+.hero__shade { position: absolute; inset: 0; background: radial-gradient(ellipse 55% 45% at 50% 50%, rgba(24, 30, 18, .42), transparent 75%), linear-gradient(180deg, rgba(30, 40, 24, .45), rgba(30, 40, 24, .08) 35%, rgba(30, 36, 22, .55)); }
+.hero__content { text-shadow: 0 2px 18px rgba(20, 24, 14, .45); }
 .hero__content { position: relative; padding: 120px 16px 80px; max-width: 820px; }
 .hero .eyebrow { color: var(--wheat); }
 .hero__title { color: #fff; font-family: var(--serif); font-size: clamp(3.2rem, 10vw, 7rem); font-weight: 600; letter-spacing: -.01em; line-height: 1; }
@@ -249,6 +250,7 @@ details p { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
 
 /* ---------- มือถือ ---------- */
 @media (max-width: 900px) {
+  .hero__bg { background-position: 12% center; }
   .nav__burger { display: block; }
   .nav__links { position: fixed; inset: 0 0 auto; top: 0; padding: 90px 24px 30px; flex-direction: column; align-items: flex-start; gap: 1.1rem; background: var(--cream); color: var(--forest); transform: translateY(-110%); transition: transform .45s cubic-bezier(.2, .7, .2, 1); box-shadow: var(--shadow); font-size: 1.1rem; z-index: -1; }
   .nav.is-open .nav__links { transform: none; }
@@ -302,3 +304,13 @@ details p { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
 .save { display: inline-block; background: var(--sun); color: var(--ink); font-size: .75rem; font-weight: 600; padding: .05rem .55rem; border-radius: 999px; }
 @media (max-width: 900px) { .acts { grid-template-columns: 1fr 1fr; } .act--big { grid-column: 1 / -1; grid-row: auto; } }
 @media (max-width: 560px) { .acts { grid-template-columns: 1fr; } }
+
+/* Hero: ข้อความชิดซ้าย (ฝั่งท้องฟ้า) บนจอกว้าง ให้เห็นคนและน้องสัตว์ทางขวา */
+@media (min-width: 901px) {
+  .hero { place-items: center start; text-align: left; }
+  .hero__content { margin-left: clamp(24px, 6vw, 96px); max-width: 600px; padding-inline: 0; }
+  .hero__title { font-size: clamp(3.4rem, 6.4vw, 5.6rem); }
+  .hero__lead { margin-left: 0; }
+  .hero__cta { justify-content: flex-start; }
+  .hero__shade { background: linear-gradient(90deg, rgba(26, 32, 18, .62) 0%, rgba(26, 32, 18, .35) 38%, transparent 62%), linear-gradient(180deg, rgba(30, 40, 24, .35), transparent 30%, rgba(30, 36, 22, .35)); }
+}

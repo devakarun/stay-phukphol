@@ -18,7 +18,7 @@ window.SP_CONFIG = {
 
   /* ---------- 2) อีเมลแอดมิน ----------
      อีเมลที่อนุญาตให้เข้า Dashboard (ต้องตรงกับใน firestore.rules ด้วย) */
-  adminEmails: ["dc99degrees@gmail.com"],
+     adminEmails: ["staybaanphukphol@gmail.com", "dc99degrees@gmail.com"],
 
   /* ---------- 3) EmailJS (ส่งอีเมลแจ้งเตือน) ----------
      สมัครฟรีที่ emailjs.com แล้วนำค่ามาใส่ ถ้าเว้นว่างไว้ ระบบจะไม่ส่งอีเมล */

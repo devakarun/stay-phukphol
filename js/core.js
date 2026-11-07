@@ -163,6 +163,7 @@
           }));
         }, onErr);
       },
+      async patch(id, fields) { await fs.collection("bookings").doc(id).update(fields); },
       async getSlip(id) {
         const d = await fs.collection("slips").doc(id).get();
         return d.exists ? d.data().image : null;
@@ -244,6 +245,7 @@
       },
       subscribeBookings(cb) { listeners.add(cb); setTimeout(emit, 0); return () => listeners.delete(cb); },
       async getSlip(id) { return load(KS, {})[id] || null; },
+      async patch(id, fields) { save(KB, load(KB, []).map((x) => (x.id === id ? Object.assign(x, fields) : x))); emit(); },
       async confirm(b, doorCode) {
         save(KB, load(KB, []).map((x) => (x.id === b.id ? Object.assign(x, { status: "confirmed", doorCode, payment: x.payment === "unpaid" ? "unpaid" : "paid" }) : x)));
         setGV(b.guestKey, { state: "confirmed", doorCode }); emit();

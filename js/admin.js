@@ -45,11 +45,13 @@
   });
 
   /* ================= รับข้อมูล + แจ้งเตือน ================= */
-  let payState = new Map();
+  let payState = new Map(), seeding = false;
   function onData(list) {
     ALL = list; DB._last = list;
-    if (known) {
-      list.filter((b) => !known.has(b.id)).forEach(notifyNew);
+    if (known && !seeding) {
+      const fresh = list.filter((b) => !known.has(b.id));
+      if (fresh.length > 3) toast(`🔔 มีการจองใหม่ ${fresh.length} รายการ`, "เปิดดูได้ที่รายการจอง", () => show("bookings"));
+      else fresh.forEach(notifyNew);
       list.filter((b) => known.has(b.id) && b.payment === "slip" && payState.get(b.id) !== "slip").forEach(notifySlip);
     }
     known = new Set(list.map((b) => b.id));
@@ -158,15 +160,16 @@
   function renderOverview() {
     const t = U.today(), now = new Date();
     const ym = t.slice(0, 7);
-    const rev = revenueByMonth(now.getFullYear()).months[now.getMonth()];
+    const mStart = U.toKey(new Date(now.getFullYear(), now.getMonth(), 1)), mEnd = U.toKey(new Date(now.getFullYear(), now.getMonth() + 1, 1));
+    const rev = computeStats(mStart, mEnd).rev;
     const pend = ALL.filter((b) => b.status === "pending").length;
-    const ci = active().filter((b) => b.checkIn === t).length;
+    const arr = arrivalsToday(), roomsIn = arr.reduce((n, b) => n + b.rooms.length, 0), waiting = arr.filter((b) => !b.checkedIn);
     const free = freeOn(t);
     const monthCount = ALL.filter((b) => b.status !== "cancelled" && (b.createdAt && new Date(b.createdAt).toISOString().slice(0, 7) === ym)).length;
     $("#kpis").innerHTML = `
       <div class="kpi kpi--hl"><span>รอดำเนินการ</span><b>${pend}</b><small>ส่งสลิปแล้ว ${ALL.filter((b) => b.status === "pending" && b.payment === "slip").length} · รอชำระ ${ALL.filter((b) => b.status === "pending" && b.payment !== "slip").length}</small></div>
-      <div class="kpi"><span>บ้านว่างคืนนี้</span><b>${free}/${TOTAL}</b><small>เข้าพัก ${TOTAL - free} หลัง</small></div>
-      <div class="kpi"><span>เช็กอินวันนี้</span><b>${ci}</b><small>การจอง</small></div>
+      <div class="kpi"><span>ห้องว่างคืนนี้</span><b>${free}/${TOTAL}</b><small>ไม่ว่าง ${TOTAL - free} ห้อง</small></div>
+      <div class="kpi"><span>เช็กอินวันนี้</span><b>${roomsIn} ห้อง</b><small>รอเช็กอิน ${waiting.reduce((n, b) => n + b.rooms.length, 0)} ห้อง</small></div>
       <div class="kpi"><span>รายได้เดือนนี้</span><b>${U.money(Math.round(rev))}</b><small>จองใหม่เดือนนี้ ${monthCount} รายการ</small></div>`;
 
     $("#tonightText").textContent = U.thDate(t, { weekday: "short", day: "numeric", month: "short" });
@@ -174,24 +177,147 @@
     $("#tonight").innerHTML = C.houses.map((h) => {
       const b = rm[h.id];
       if (!b) return `<div class="house"><b>${U.esc(h.name)}</b>ว่าง<br><span class="st">พร้อมขาย</span></div>`;
-      return `<div class="house busy ${b.status === "pending" ? "pending" : ""}" data-id="${b.id}"><b>${U.esc(h.name)}</b>${U.esc(b.name.split(" ")[0])}<br><span class="st">ออก ${short(b.checkOut)}</span></div>`;
+      const pendingB = b.status === "pending";
+      return `<div class="house busy ${pendingB ? "busy--pending" : ""}" data-id="${b.id}"><b>${U.esc(h.name)}</b>${U.esc(b.name.split(" ")[0])}<br><span class="st">${pendingB ? (b.payment === "slip" ? "รอตรวจสลิป" : "รอชำระ") : "ไม่ว่าง"}</span><small class="out">ออก ${short(b.checkOut)}</small></div>`;
     }).join("");
 
+    // เช็กอินวันนี้ เรียงตามเวลา
+    $("#todayCount").textContent = `${roomsIn} ห้อง`;
+    $("#todayRooms").innerHTML = arr.length
+      ? `รอเช็กอิน <b>${waiting.reduce((n, b) => n + b.rooms.length, 0)}</b> ห้อง${waiting.length ? ": " + waiting.flatMap((b) => b.rooms).map(U.houseName).join(", ") : ""}`
+      : "";
+    $("#todayIn").innerHTML = arr.length ? arr.map((b) => `
+      <li data-id="${b.id}" class="${b.checkedIn ? "is-in" : ""}">
+        <div class="d"><b>${arrTime(b)}</b><small>${b.earlyCheckIn ? "ก่อนเวลา" : "มาถึง"}</small></div>
+        <div class="x"><div><b>${b.rooms.map(U.houseName).join(", ")}</b> · ${U.esc(b.name)}</div>
+          <div class="muted small">${b.adults + b.children} ท่าน · ${b.nights} คืน${b.breakfastTime ? " · 🍳 " + U.esc(b.breakfastTime) : ""} · ${U.esc(b.phone)}</div></div>
+        ${b.checkedIn ? `<span class="tag tag--confirmed">เช็กอินแล้ว ${U.esc(b.checkedIn)}</span>` : b.status === "confirmed" ? `<button class="btn btn--sm btn--ok" data-checkin="${b.id}">✓ เช็กอินแล้ว</button>` : tag(b)}
+      </li>`).join("") : `<p class="empty">ไม่มีเช็กอินวันนี้</p>`;
+
     const week = U.addDays(t, 7);
-    const up = active().filter((b) => b.checkIn >= t && b.checkIn < week).sort((a, z) => a.checkIn.localeCompare(z.checkIn));
+    const up = active().filter((b) => b.checkIn > t && b.checkIn < week).sort((a, z) => a.checkIn.localeCompare(z.checkIn) || arrTime(a).localeCompare(arrTime(z)));
     $("#upcoming").innerHTML = up.length ? up.map((b) => {
       const d = U.fromKey(b.checkIn);
       return `<li data-id="${b.id}"><div class="d"><b>${d.getDate()}</b><small>${d.toLocaleDateString("th-TH", { month: "short" })}</small></div>
-        <div class="x"><div><b>${U.esc(b.name)}</b> · ${b.nights} คืน</div><div class="muted small">${b.rooms.map(U.houseName).join(", ")} · ${b.adults + b.children} ท่าน${b.rateName === "รวมอาหารเช้า" ? " · 🍳 อาหารเช้า" + (b.breakfastTime ? " " + U.esc(b.breakfastTime) : "") : ""}${b.requests.length ? " · " + U.esc(b.requests.join(", ")) : ""}</div></div>${tag(b)}</li>`;
-    }).join("") : `<p class="empty">ไม่มีเช็กอินในสัปดาห์นี้</p>`;
-
-    $("#strip").innerHTML = Array.from({ length: 14 }, (_, i) => {
-      const k = U.addDays(t, i), f = freeOn(k), d = U.fromKey(k);
-      return `<div class="lvl${lv(f)}" data-day="${k}">${d.toLocaleDateString("th-TH", { weekday: "short" })}<b>${f}</b>${d.getDate()}</div>`;
-    }).join("");
+        <div class="x"><div><b>${U.esc(b.name)}</b> · ${b.nights} คืน</div><div class="muted small">${b.rooms.map(U.houseName).join(", ")} · ${b.adults + b.children} ท่าน · มาถึง ${arrTime(b)}${b.breakfastTime ? " · 🍳 " + U.esc(b.breakfastTime) : ""}</div></div>${tag(b)}</li>`;
+    }).join("") : `<p class="empty">ไม่มีเช็กอินใน 7 วันข้างหน้า</p>`;
 
     $("#latestTable").innerHTML = tableHTML(ALL.slice(0, 6));
   }
+  function arrTime(b) { const m = String(b.earlyCheckIn || b.arrivalTime || C.checkInTime).match(/\d{1,2}:\d{2}/); return m ? m[0].padStart(5, "0") : C.checkInTime; }
+  function arrivalsToday() {
+    const t = U.today();
+    return active().filter((b) => b.checkIn === t).sort((a, z) => (a.checkedIn ? 1 : 0) - (z.checkedIn ? 1 : 0) || arrTime(a).localeCompare(arrTime(z)));
+  }
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-checkin]"); if (!btn) return;
+    e.stopPropagation(); btn.disabled = true;
+    const time = new Date().toTimeString().slice(0, 5);
+    try { await DB.patch(btn.dataset.checkin, { checkedIn: time }); toast("บันทึกเช็กอินแล้ว", time + " น."); }
+    catch (ex) { toast("บันทึกไม่สำเร็จ", ex.message); btn.disabled = false; }
+  }, true);
+
+  /* ================= ค้นหาอัจฉริยะ ================= */
+  const TH_MONTHS = [["ม.ค.", "มกราคม", "jan"], ["ก.พ.", "กุมภาพันธ์", "feb"], ["มี.ค.", "มีนาคม", "mar"], ["เม.ย.", "เมษายน", "apr"], ["พ.ค.", "พฤษภาคม", "may"], ["มิ.ย.", "มิถุนายน", "jun"],
+    ["ก.ค.", "กรกฎาคม", "jul"], ["ส.ค.", "สิงหาคม", "aug"], ["ก.ย.", "กันยายน", "sep"], ["ต.ค.", "ตุลาคม", "oct"], ["พ.ย.", "พฤศจิกายน", "nov"], ["ธ.ค.", "ธันวาคม", "dec"]];
+  const normYear = (y) => { y = +y; if (y < 100) y += 2500; if (y > 2400) y -= 543; return y; };
+  const near = (m, d) => { // ไม่ระบุปี: เลือกปีที่ใกล้วันนี้ที่สุด
+    const n = new Date(), c = [n.getFullYear() - 1, n.getFullYear(), n.getFullYear() + 1].map((y) => new Date(y, m, d));
+    return c.sort((a, z) => Math.abs(a - n) - Math.abs(z - n))[0];
+  };
+  function parseDateQ(q) {
+    q = q.trim().toLowerCase();
+    if (q === "วันนี้" || q === "today") return { day: U.today() };
+    if (q === "พรุ่งนี้" || q === "tomorrow") return { day: U.addDays(U.today(), 1) };
+    if (q === "เมื่อวาน" || q === "yesterday") return { day: U.addDays(U.today(), -1) };
+    let m;
+    if ((m = q.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) return { day: U.toKey(new Date(normYear(m[1]), m[2] - 1, +m[3])) };
+    if ((m = q.match(/^(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?$/))) {
+      const d = +m[1], mo = +m[2] - 1; if (mo > 11 || d > 31) return null;
+      return { day: U.toKey(m[3] ? new Date(normYear(m[3]), mo, d) : near(mo, d)) };
+    }
+    // รูปแบบ: [วัน] เดือน [ปี] เช่น "12 พ.ย.", "พฤศจิกายน 2569", "nov"
+    for (let mi = 0; mi < 12; mi++) {
+      for (const n of [...TH_MONTHS[mi], TH_MONTHS[mi][0].replace(/\./g, "")]) {
+        const esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const mm = q.match(new RegExp("^(?:(\\d{1,2})\\s*)?" + esc + "\\s*(\\d{2,4})?$"));
+        if (!mm) continue;
+        const y = mm[2] ? normYear(mm[2]) : null;
+        if (mm[1]) return { day: U.toKey(y ? new Date(y, mi, +mm[1]) : near(mi, +mm[1])) };
+        return { month: mi, year: y };
+      }
+    }
+    return null;
+  }
+  function haystack(b) {
+    return [b.code, b.name, b.email, b.phone, b.phone.replace(/\D/g, ""), b.rooms.map((r) => U.houseName(r) + " @" + r + " ห้อง" + r).join(" "),
+      b.rateName, stateOf(b)[1], b.note, (b.requests || []).join(" "), b.doorCode].join(" ").toLowerCase();
+  }
+  function matchBooking(b, q) {
+    const toks = q.trim().toLowerCase().split(/\s+(?=\S)/).filter(Boolean);
+    if (!toks.length) return null;
+    const why = [];
+    // ลองทั้งข้อความเป็นวันที่ก่อน (เช่น "12 พ.ย. 2569")
+    const whole = parseDateQ(q);
+    const parts = whole ? [{ date: whole }] : toks.map((t) => ({ t, date: parseDateQ(t) }));
+    const H = haystack(b), created = b.createdAt ? U.toKey(new Date(b.createdAt)) : "";
+    for (const p of parts) {
+      if (p.date && p.date.day) {
+        const k = p.date.day;
+        if (b.checkIn <= k && k < b.checkOut) why.push(b.checkIn === k ? "เช็กอินวันนี้" : "พักวันที่นี้");
+        else if (b.checkOut === k) why.push("เช็กเอาต์วันที่นี้");
+        else if (created === k) why.push("จองวันที่นี้");
+        else return null;
+      } else if (p.date && p.date.month != null) {
+        const ok = [b.checkIn, b.checkOut, created].some((k) => k && +k.slice(5, 7) - 1 === p.date.month && (!p.date.year || +k.slice(0, 4) === p.date.year));
+        if (!ok) return null; why.push("เดือน " + TH_MONTHS[p.date.month][0]);
+      } else {
+        const t = p.t.replace(/^stay/, ""), digits = t.replace(/\D/g, "");
+        if (H.includes(p.t) || H.includes(t)) why.push(b.code.toLowerCase() === p.t ? "รหัสจอง" : "");
+        else if (digits.length >= 3 && b.phone.replace(/\D/g, "").includes(digits)) why.push("เบอร์โทร");
+        else return null;
+      }
+    }
+    return why.filter(Boolean);
+  }
+  function searchAll(q) {
+    return ALL.map((b) => ({ b, why: matchBooking(b, q) })).filter((x) => x.why)
+      .sort((a, z) => (z.b.checkIn >= U.today()) - (a.b.checkIn >= U.today()) || Math.abs(U.fromKey(a.b.checkIn) - Date.now()) - Math.abs(U.fromKey(z.b.checkIn) - Date.now()));
+  }
+  let smartSel = 0, smartRes = [];
+  function renderSmart() {
+    const q = $("#smart").value, P = $("#smartPanel");
+    if (!q.trim()) { P.classList.remove("is-open"); return; }
+    smartRes = searchAll(q); smartSel = 0;
+    const d = parseDateQ(q);
+    const hint = d && d.day ? `วันที่ ${U.thDate(d.day, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}` : d && d.month != null ? `เดือน ${TH_MONTHS[d.month][1]}` : "";
+    P.innerHTML = `<div class="smart__head">${smartRes.length ? `พบ ${smartRes.length} รายการ` : "ไม่พบการจองที่ตรงกับคำค้นหา"}${hint ? ` · ค้นหา${hint}` : ""}</div>` +
+      smartRes.slice(0, 8).map((x, i) => `<button class="smart__item ${i === 0 ? "is-sel" : ""}" data-id="${x.b.id}" role="option">
+        <span class="smart__main"><b>${U.esc(x.b.name)}</b> <span class="code">${U.esc(x.b.code)}</span>${x.why.length ? `<em>${U.esc([...new Set(x.why)].join(" · "))}</em>` : ""}</span>
+        <span class="muted small">${x.b.rooms.map(U.houseName).join(", ")} · ${short(x.b.checkIn)}–${short(x.b.checkOut)} · ${U.esc(x.b.phone)}</span>
+        ${tag(x.b)}</button>`).join("") +
+      (smartRes.length > 8 ? `<button class="smart__more" data-more="1">ดูทั้งหมด ${smartRes.length} รายการในหน้ารายการจอง →</button>` : "");
+    P.classList.add("is-open");
+  }
+  $("#smart").addEventListener("input", renderSmart);
+  $("#smart").addEventListener("focus", renderSmart);
+  $("#smart").addEventListener("keydown", (e) => {
+    const items = $$("#smartPanel .smart__item");
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault(); if (!items.length) return;
+      smartSel = (smartSel + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+      items.forEach((x, i) => x.classList.toggle("is-sel", i === smartSel));
+    } else if (e.key === "Enter") { e.preventDefault(); if (items[smartSel]) { openBooking(items[smartSel].dataset.id); closeSmart(); } }
+    else if (e.key === "Escape") closeSmart();
+  });
+  function closeSmart() { $("#smartPanel").classList.remove("is-open"); }
+  $("#smartPanel").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const it = e.target.closest(".smart__item");
+    if (it) { openBooking(it.dataset.id); closeSmart(); return; }
+    if (e.target.closest("[data-more]")) { $("#q").value = $("#smart").value; filter = "all"; show("bookings"); closeSmart(); }
+  });
+  document.addEventListener("click", (e) => { if (!e.target.closest("#smartWrap")) closeSmart(); });
 
   /* ================= ตาราง ================= */
   function tableHTML(rows) {
@@ -205,9 +331,8 @@
         <td class="muted small">${new Date(b.createdAt).toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</td></tr>`).join("") + "</tbody>";
   }
   function filtered() {
-    const q = $("#q").value.trim().toLowerCase();
-    return ALL.filter((b) => (filter === "all" || b.status === filter) &&
-      (!q || [b.code, b.name, b.phone, b.email].join(" ").toLowerCase().includes(q)));
+    const q = $("#q").value.trim();
+    return ALL.filter((b) => (filter === "all" || b.status === filter) && (!q || matchBooking(b, q)));
   }
   function renderTable() { $("#allTable").innerHTML = tableHTML(filtered()); }
   $("#q").addEventListener("input", renderTable);
@@ -266,45 +391,162 @@
     calMode = b.dataset.m; $$("#calMode button").forEach((x) => x.classList.toggle("is-active", x === b)); renderCalendar();
   }));
 
-  /* ================= ยอดขาย ================= */
-  function renderSales() {
-    const y = saleMonth.getFullYear(), m = saleMonth.getMonth();
-    $("#saleTitle").textContent = saleMonth.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
-    $("#yearText").textContent = "ปี " + (y + 543);
-    const { months, byHouse } = revenueByMonth(y);
-    const days = new Date(y, m + 1, 0).getDate();
-    let sold = 0, pendingRev = 0;
-    for (let d = 1; d <= days; d++) {
-      const k = U.toKey(new Date(y, m, d));
-      ALL.forEach((b) => {
-        if (b.checkIn <= k && k < b.checkOut) {
-          if (b.status === "confirmed") sold += b.rooms.length;
-          if (b.status === "pending") pendingRev += b.total / b.nights;
-        }
-      });
+  /* ================= ยอดขาย / รายงาน ================= */
+  let saleMode = "month", saleAnchor = U.today(), cFrom = U.addDays(U.today(), -29), cTo = U.today(), chartT;
+  const TH_M = (d, o) => d.toLocaleDateString("th-TH", o);
+  function saleRange() {
+    const a = U.fromKey(saleAnchor), y = a.getFullYear(), m = a.getMonth();
+    if (saleMode === "day") return { s: saleAnchor, e: U.addDays(saleAnchor, 1), title: TH_M(a, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) };
+    if (saleMode === "week") {
+      const s = U.addDays(saleAnchor, -((a.getDay() + 6) % 7));
+      return { s, e: U.addDays(s, 7), title: "สัปดาห์ " + U.thDate(s, { day: "numeric", month: "short" }) + " – " + U.thDate(U.addDays(s, 6), { day: "numeric", month: "short", year: "numeric" }) };
     }
-    const rev = months[m], occ = (sold / (days * TOTAL)) * 100, adr = sold ? rev / sold : 0;
-    const prev = m ? months[m - 1] : null, diff = prev ? ((rev - prev) / prev) * 100 : null;
-    $("#saleKpis").innerHTML = `
-      <div class="kpi kpi--hl"><span>รายได้ (ยืนยันแล้ว)</span><b>${U.money(Math.round(rev))}</b><small>${diff == null ? "&nbsp;" : (diff >= 0 ? "▲ " : "▼ ") + Math.abs(diff).toFixed(0) + "% จากเดือนก่อน"}</small></div>
-      <div class="kpi"><span>รอยืนยัน (คาดการณ์)</span><b>${U.money(Math.round(pendingRev))}</b><small>ยังไม่นับในรายได้</small></div>
-      <div class="kpi"><span>อัตราการเข้าพัก</span><b>${occ.toFixed(0)}%</b><small>${sold} จาก ${days * TOTAL} หลัง-คืน</small></div>
-      <div class="kpi"><span>ราคาเฉลี่ย / หลัง / คืน</span><b>${U.money(Math.round(adr))}</b><small>ADR</small></div>`;
-
-    if (typeof Chart === "undefined") return;
-    const css = getComputedStyle(document.documentElement), forest = css.getPropertyValue("--forest").trim(), wheat = css.getPropertyValue("--wheat").trim();
-    const labels = Array.from({ length: 12 }, (_, i) => new Date(y, i, 1).toLocaleDateString("th-TH", { month: "short" }));
-    const opts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => U.money(Math.round(c.raw)) } } },
-      scales: { y: { beginAtZero: true, ticks: { callback: (v) => "฿" + Number(v).toLocaleString() }, grid: { color: "rgba(46,74,44,.08)" } }, x: { grid: { display: false } } } };
-    chartY && chartY.destroy();
-    chartY = new Chart($("#chartYear"), { type: "bar", data: { labels, datasets: [{ data: months, backgroundColor: months.map((_, i) => (i === m ? forest : wheat)), borderRadius: 8 }] }, options: opts });
-    const hm = byHouse[m] || {};
-    chartH && chartH.destroy();
-    chartH = new Chart($("#chartHouse"), { type: "bar", data: { labels: C.houses.map((h) => h.name), datasets: [{ data: C.houses.map((h) => hm[h.id] || 0), backgroundColor: forest, borderRadius: 8 }] },
-      options: Object.assign({}, opts, { indexAxis: "y", scales: { x: opts.scales.y, y: { grid: { display: false } } } }) });
+    if (saleMode === "month") return { s: U.toKey(new Date(y, m, 1)), e: U.toKey(new Date(y, m + 1, 1)), title: TH_M(a, { month: "long", year: "numeric" }) };
+    if (saleMode === "quarter") {
+      const q = Math.floor(m / 3);
+      return { s: U.toKey(new Date(y, q * 3, 1)), e: U.toKey(new Date(y, q * 3 + 3, 1)),
+        title: `ไตรมาส ${q + 1}/${y + 543} (${TH_M(new Date(y, q * 3, 1), { month: "short" })} – ${TH_M(new Date(y, q * 3 + 2, 1), { month: "short" })})` };
+    }
+    if (saleMode === "year") return { s: U.toKey(new Date(y, 0, 1)), e: U.toKey(new Date(y + 1, 0, 1)), title: "ปี " + (y + 543) };
+    const f = cFrom <= cTo ? cFrom : cTo, t = cFrom <= cTo ? cTo : cFrom;
+    return { s: f, e: U.addDays(t, 1), title: U.thDate(f) + " – " + U.thDate(t) };
   }
-  $("#salePrev").onclick = () => { saleMonth = new Date(saleMonth.getFullYear(), saleMonth.getMonth() - 1, 1); renderSales(); };
-  $("#saleNext").onclick = () => { saleMonth = new Date(saleMonth.getFullYear(), saleMonth.getMonth() + 1, 1); renderSales(); };
+  function shiftSale(dir) {
+    const a = U.fromKey(saleAnchor);
+    if (saleMode === "day") saleAnchor = U.addDays(saleAnchor, dir);
+    else if (saleMode === "week") saleAnchor = U.addDays(saleAnchor, 7 * dir);
+    else if (saleMode === "month") saleAnchor = U.toKey(new Date(a.getFullYear(), a.getMonth() + dir, 1));
+    else if (saleMode === "quarter") saleAnchor = U.toKey(new Date(a.getFullYear(), a.getMonth() + 3 * dir, 1));
+    else if (saleMode === "year") saleAnchor = U.toKey(new Date(a.getFullYear() + dir, 0, 1));
+    else { const n = U.nightsBetween(cFrom, U.addDays(cTo, 1)).length; cFrom = U.addDays(cFrom, n * dir); cTo = U.addDays(cTo, n * dir); }
+    renderSales();
+  }
+  function renderSalePick() {
+    const a = U.fromKey(saleAnchor), y = a.getFullYear(), m = a.getMonth();
+    let h = "";
+    if (saleMode === "day" || saleMode === "week") h = `<input type="date" id="spDate" value="${saleAnchor}" aria-label="เลือกวันที่" />`;
+    else if (saleMode === "month" || saleMode === "quarter") h = `<input type="month" id="spMonth" value="${y}-${String(m + 1).padStart(2, "0")}" aria-label="เลือกเดือน" />`;
+    else if (saleMode === "year") {
+      const ys = new Set(ALL.map((b) => +b.checkIn.slice(0, 4))); ys.add(new Date().getFullYear()); ys.add(y);
+      h = `<select id="spYear" aria-label="เลือกปี">${[...ys].sort().map((v) => `<option value="${v}" ${v === y ? "selected" : ""}>${v + 543}</option>`).join("")}</select>`;
+    } else h = `<input type="date" id="spFrom" value="${cFrom}" aria-label="ตั้งแต่วันที่" /><span class="muted">ถึง</span><input type="date" id="spTo" value="${cTo}" aria-label="ถึงวันที่" />`;
+    $("#salePick").innerHTML = h;
+    const on = (id, fn) => { const el = $("#" + id); if (el) el.onchange = () => { if (el.value) { fn(el.value); renderSales(); } }; };
+    on("spDate", (v) => (saleAnchor = v));
+    on("spMonth", (v) => (saleAnchor = v + "-01"));
+    on("spYear", (v) => (saleAnchor = v + "-01-01"));
+    on("spFrom", (v) => (cFrom = v)); on("spTo", (v) => (cTo = v));
+  }
+  $$("#salePeriod button").forEach((b) => (b.onclick = () => {
+    saleMode = b.dataset.p; $$("#salePeriod button").forEach((x) => x.classList.toggle("is-active", x === b)); renderSales();
+  }));
+  $("#salePrev").onclick = () => shiftSale(-1);
+  $("#saleNext").onclick = () => shiftSale(1);
+
+  /* คำนวณสถิติในช่วง [s, e) — นับตามคืนจริง แบ่งรายได้ต่อคืนต่อห้อง */
+  function computeStats(s, e) {
+    const days = U.nightsBetween(s, e);
+    const room = {}; C.houses.forEach((h) => (room[h.id] = { id: h.id, name: h.name, nights: 0, rev: 0, bookings: new Set() }));
+    const daily = {}; days.forEach((k) => (daily[k] = { rev: 0, rooms: {} }));
+    const list = []; let pendingRev = 0, pendingNights = 0;
+    ALL.forEach((b) => {
+      if (b.status === "cancelled" || b.checkOut <= s || b.checkIn >= e) return;
+      const ks = U.nightsBetween(b.checkIn > s ? b.checkIn : s, b.checkOut < e ? b.checkOut : e);
+      const perNight = b.total / b.nights, per = perNight / b.rooms.length;
+      if (b.status !== "confirmed") { pendingRev += perNight * ks.length; pendingNights += ks.length * b.rooms.length; return; }
+      ks.forEach((k) => b.rooms.forEach((r) => {
+        const R = room[r]; if (!R) return;
+        R.nights++; R.rev += per; R.bookings.add(b.id);
+        daily[k].rev += per; daily[k].rooms[r] = b.code;
+      }));
+      list.push({ b, nightsIn: ks.length, revIn: perNight * ks.length });
+    });
+    const rooms = Object.values(room);
+    const rev = rooms.reduce((t, r) => t + r.rev, 0), sold = rooms.reduce((t, r) => t + r.nights, 0);
+    const cap = days.length * TOTAL;
+    return { days, rooms, daily, list, rev, sold, cap, occ: cap ? (sold / cap) * 100 : 0, adr: sold ? rev / sold : 0, pendingRev, pendingNights };
+  }
+
+  let lastReport = null;
+  function renderSales() {
+    renderSalePick();
+    const R = saleRange(), st = computeStats(R.s, R.e);
+    lastReport = { R, st };
+    $("#saleTitle").textContent = R.title;
+    $("#saleRange").textContent = `${U.thDate(R.s)} – ${U.thDate(U.addDays(R.e, -1))} · ${st.days.length} วัน`;
+    $("#saleKpis").innerHTML = `
+      <div class="kpi kpi--hl"><span>รายได้รวม (ยืนยันแล้ว)</span><b>${U.money(Math.round(st.rev))}</b><small>${st.list.length} การจอง</small></div>
+      <div class="kpi"><span>จำนวนคืนที่ขายได้</span><b>${st.sold}</b><small>จาก ${st.cap} ห้อง-คืน · เข้าพัก ${st.occ.toFixed(0)}%</small></div>
+      <div class="kpi"><span>ราคาเฉลี่ย / ห้อง / คืน</span><b>${U.money(Math.round(st.adr))}</b><small>ADR</small></div>
+      <div class="kpi"><span>รอยืนยัน (คาดการณ์)</span><b>${U.money(Math.round(st.pendingRev))}</b><small>${st.pendingNights} ห้อง-คืน · ยังไม่นับในรายได้</small></div>`;
+
+    // อันดับห้องยอดนิยม
+    const ranked = [...st.rooms].sort((a, z) => z.nights - a.nights || z.rev - a.rev).slice(0, 5);
+    const maxN = Math.max(1, ...ranked.map((r) => r.nights));
+    $("#rank").innerHTML = ranked.map((r, i) => `
+      <li><span class="rank__n">${i + 1}</span>
+        <div class="rank__body"><div class="rank__top"><b>${U.esc(r.name)}</b><span>${r.nights} คืน · ${U.money(Math.round(r.rev))}</span></div>
+        <div class="rank__bar"><i style="width:${(r.nights / maxN) * 100}%"></i></div>
+        <small>${r.bookings.size} การจอง · เข้าพัก ${st.days.length ? ((r.nights / st.days.length) * 100).toFixed(0) : 0}% ของช่วงนี้</small></div></li>`).join("");
+
+    // ตารางรายห้อง
+    $("#roomTableNote").textContent = R.title;
+    $("#roomTable").innerHTML = `<thead><tr><th>ห้อง</th><th class="r">คืนที่เข้าพัก</th><th class="r">จำนวนการจอง</th><th class="r">อัตราเข้าพัก</th><th class="r">รายได้</th><th class="r">สัดส่วนรายได้</th></tr></thead><tbody>` +
+      st.rooms.map((r) => `<tr><td><b>${U.esc(r.name)}</b></td><td class="r">${r.nights}</td><td class="r">${r.bookings.size}</td>
+        <td class="r">${st.days.length ? ((r.nights / st.days.length) * 100).toFixed(0) : 0}%</td><td class="r"><b>${U.money(Math.round(r.rev))}</b></td>
+        <td class="r">${st.rev ? ((r.rev / st.rev) * 100).toFixed(0) : 0}%</td></tr>`).join("") +
+      `</tbody><tfoot><tr><td>รวมทั้งหมด</td><td class="r">${st.sold}</td><td class="r">${st.list.length}</td><td class="r">${st.occ.toFixed(0)}%</td><td class="r">${U.money(Math.round(st.rev))}</td><td class="r">100%</td></tr></tfoot>`;
+
+    // กราฟรายได้
+    if (typeof Chart === "undefined") return;
+    let buckets = [], unit;
+    if (saleMode === "day") { unit = "แยกตามห้อง"; buckets = st.rooms.map((r) => [r.name, r.rev]); }
+    else if (st.days.length <= 62) { unit = "รายวัน"; buckets = st.days.map((k) => [U.thDate(k, { day: "numeric", month: "short" }), st.daily[k].rev]); }
+    else {
+      unit = "รายเดือน"; const mm = {};
+      st.days.forEach((k) => { const mk = k.slice(0, 7); mm[mk] = (mm[mk] || 0) + st.daily[k].rev; });
+      buckets = Object.keys(mm).map((mk) => [TH_M(U.fromKey(mk + "-01"), { month: "short", year: "2-digit" }), mm[mk]]);
+    }
+    $("#trendUnit").textContent = unit;
+    const css = getComputedStyle(document.documentElement), forest = css.getPropertyValue("--forest").trim();
+    chartT && chartT.destroy();
+    chartT = new Chart($("#chartTrend"), { type: "bar",
+      data: { labels: buckets.map((b) => b[0]), datasets: [{ data: buckets.map((b) => Math.round(b[1])), backgroundColor: forest, borderRadius: 6, maxBarThickness: 38 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => U.money(c.raw) } } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => "฿" + Number(v).toLocaleString() }, grid: { color: "rgba(46,74,44,.08)" } },
+                  x: { grid: { display: false }, ticks: { autoSkip: true, maxRotation: 0 } } } } });
+  }
+
+  /* ---------- ส่งออก Excel ---------- */
+  $("#btnXlsx").onclick = () => {
+    if (typeof XLSX === "undefined") { toast("ส่งออกไม่ได้", "โหลดเครื่องมือ Excel ไม่สำเร็จ กรุณารีเฟรชหน้าแล้วลองใหม่"); return; }
+    if (!lastReport) renderSales();
+    const { R, st } = lastReport, last = U.addDays(R.e, -1), r0 = (n) => Math.round(n);
+    const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0);
+    const wb = XLSX.utils.book_new();
+    const add = (name, rows, widths) => { const ws = XLSX.utils.aoa_to_sheet(rows); ws["!cols"] = widths.map((w) => ({ wch: w })); XLSX.utils.book_append_sheet(wb, ws, name); };
+    add("สรุป", [
+      ["รายงานยอดขาย Stay@Phukphol"], ["ช่วงรายงาน", R.title], ["ตั้งแต่", R.s], ["ถึง", last], ["จำนวนวัน", st.days.length], [],
+      ["รายได้รวม (บาท) - ยืนยันแล้ว", r0(st.rev)], ["จำนวนการจอง", st.list.length], ["จำนวนคืนที่ขายได้ (ห้อง-คืน)", st.sold],
+      ["ห้อง-คืนทั้งหมดที่ขายได้", st.cap], ["อัตราการเข้าพัก (%)", pct(st.sold, st.cap)], ["ราคาเฉลี่ยต่อห้องต่อคืน (บาท)", r0(st.adr)], [],
+      ["รอยืนยัน - คาดการณ์ (บาท)", r0(st.pendingRev)], ["รอยืนยัน (ห้อง-คืน)", st.pendingNights], [],
+      ["ออกรายงานเมื่อ", new Date().toLocaleString("th-TH")]
+    ], [34, 30]);
+    add("แยกรายห้อง", [["ห้อง", "คืนที่เข้าพัก", "จำนวนการจอง", "อัตราเข้าพัก (%)", "รายได้ (บาท)", "สัดส่วนรายได้ (%)"],
+      ...st.rooms.map((r) => [r.name, r.nights, r.bookings.size, pct(r.nights, st.days.length), r0(r.rev), pct(r.rev, st.rev)]),
+      ["รวมทั้งหมด", st.sold, st.list.length, pct(st.sold, st.cap), r0(st.rev), 100]], [14, 14, 14, 16, 16, 18]);
+    add("อันดับห้องยอดนิยม", [["อันดับ", "ห้อง", "คืนที่เข้าพัก", "รายได้ (บาท)"],
+      ...[...st.rooms].sort((a, z) => z.nights - a.nights || z.rev - a.rev).map((r, i) => [i + 1, r.name, r.nights, r0(r.rev)])], [8, 14, 14, 16]);
+    add("รายวัน", [["วันที่", "ห้องที่ขายได้", "รายได้ (บาท)", ...C.houses.map((h) => h.name + " (รหัสจอง)")],
+      ...st.days.map((k) => [k, Object.keys(st.daily[k].rooms).length, r0(st.daily[k].rev), ...C.houses.map((h) => st.daily[k].rooms[h.id] || "")])],
+      [12, 14, 14, ...C.houses.map(() => 16)]);
+    add("รายการจอง", [["รหัสจอง", "ชื่อ", "โทร", "เช็กอิน", "เช็กเอาต์", "คืนทั้งหมด", "คืนในช่วงนี้", "ห้อง", "แพ็กเกจ", "ยอดทั้งการจอง (บาท)", "รายได้ในช่วงนี้ (บาท)"],
+      ...st.list.sort((a, z) => a.b.checkIn.localeCompare(z.b.checkIn)).map(({ b, nightsIn, revIn }) =>
+        [b.code, b.name, b.phone, b.checkIn, b.checkOut, b.nights, nightsIn, b.rooms.map(U.houseName).join(", "), b.rateName || "", b.total, r0(revIn)])],
+      [10, 22, 14, 12, 12, 10, 12, 18, 16, 18, 18]);
+    XLSX.writeFile(wb, `StayPhukphol-report-${R.s}_to_${last}.xlsx`);
+    toast("ส่งออกแล้ว", "ไฟล์ Excel อยู่ในโฟลเดอร์ดาวน์โหลด");
+  };
 
   /* ================= Modal ================= */
   const modal = $("#modal");
@@ -421,7 +663,7 @@
 
   /* ================= เครื่องมือโหมดทดลอง ================= */
   if (DB.mode === "demo") {
-    $("#btnSeed").onclick = async () => { await DB.seed(); toast("เพิ่มข้อมูลตัวอย่างแล้ว", "ลองเปิดปฏิทินและยอดขายดูได้เลย"); };
+    $("#btnSeed").onclick = async () => { seeding = true; await DB.seed(); seeding = false; toast("เพิ่มข้อมูลตัวอย่างแล้ว", "ลองเปิดปฏิทินและยอดขายดูได้เลย"); };
     $("#btnClear").onclick = () => { if (confirm("ล้างข้อมูลทดลองทั้งหมด?")) DB.clear(); };
   }
 })();

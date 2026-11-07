@@ -213,3 +213,60 @@ input:focus { outline: 2px solid var(--sage); }
 .door { font-family: "Jost", var(--sans); letter-spacing: .2em; color: var(--forest); }
 .confirmbox .btn--ok { width: fit-content; }
 @media (max-width: 720px) { .mgrid { grid-template-columns: 1fr; } }
+
+/* ---------- ภาพรวม: ห้องไม่ว่างเป็นสีแดง ---------- */
+.house.busy { background: #b3412c; color: #fff; border: 0; cursor: pointer; }
+.house.busy b { color: #fff; }
+.house.busy .st { background: rgba(255,255,255,.2); color: #fff; }
+.house.busy--pending { background: #f6d9cf; color: #7a2e1d; border: 1.5px solid #d9826b; }
+.house.busy--pending b { color: #8f2f1b; }
+.house.busy--pending .st { background: #fff; color: #8f2f1b; }
+.lg--busy { background: #b3412c; } .lg--busy2 { background: #f6d9cf; border: 1px solid #d9826b; }
+.card .legend { margin-top: 12px; }
+.pillcount { background: var(--forest); color: var(--cream); border-radius: 999px; padding: .1rem .7rem; font-size: .82rem; font-family: "Jost", var(--sans); }
+#todayRooms { margin: -6px 0 10px; }
+.checkin li { align-items: center; }
+.checkin .d b { font-family: "Jost", var(--sans); font-size: 1.05rem; }
+.checkin li.is-in { opacity: .55; }
+.checkin .btn--sm { white-space: nowrap; }
+
+/* ---------- ค้นหาอัจฉริยะ ---------- */
+.top { flex-wrap: wrap; }
+.smart { position: relative; flex: 1 1 320px; max-width: 520px; margin-left: auto; }
+.smart input { width: 100%; padding: .7rem 1rem .7rem 2.4rem; border-radius: 12px; background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%237a8c5a' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='M11 11l4 4'/%3E%3C/svg%3E") no-repeat .85rem center; }
+.smart__panel { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 20px 50px -20px rgba(0,0,0,.35); padding: 6px; z-index: 40; display: none; max-height: 70vh; overflow: auto; }
+.smart__panel.is-open { display: block; }
+.smart__head { font-size: .78rem; color: var(--muted); padding: .4rem .6rem; }
+.smart__item { width: 100%; text-align: left; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: .6rem .7rem; border-radius: 10px; }
+.smart__item .muted { grid-column: 1; }
+.smart__item .tag { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+.smart__item.is-sel, .smart__item:hover { background: var(--cream); }
+.smart__main em { font-style: normal; font-size: .72rem; background: #fff6dc; color: #7a5b10; border-radius: 999px; padding: 0 .5rem; margin-left: .4rem; }
+.smart__more { width: 100%; padding: .6rem; color: var(--forest); font-size: .85rem; text-decoration: underline; }
+.top__right { margin-left: 0; }
+
+/* ---------- รายงานยอดขาย ---------- */
+.salebar { display: grid; gap: 12px; }
+.salebar .seg { margin-left: 0; flex-wrap: wrap; width: fit-content; max-width: 100%; }
+.salebar__row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.salebar__title { display: grid; min-width: 200px; }
+.salebar__title h3 { font-size: 1.15rem; }
+.salebar__pick { display: flex; gap: 6px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+.salebar__pick input, .salebar__pick select { padding: .45rem .6rem; }
+.rank { list-style: none; display: grid; gap: 12px; }
+.rank li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; }
+.rank__n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--sand); font-family: "Jost", var(--sans); font-weight: 500; color: var(--forest); }
+.rank li:first-child .rank__n { background: var(--forest); color: var(--cream); }
+.rank__body { display: grid; gap: 4px; min-width: 0; }
+.rank__top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .9rem; }
+.rank__top span { font-family: "Jost", var(--sans); color: var(--muted); }
+.rank__bar { height: 10px; border-radius: 6px; background: var(--cream); overflow: hidden; }
+.rank__bar i { display: block; height: 100%; background: var(--forest); border-radius: 6px; transition: width .5s; }
+.rank li:not(:first-child) .rank__bar i { background: var(--moss); }
+.rank small { color: var(--muted); font-size: .75rem; }
+.rtable .r { text-align: right; font-family: "Jost", var(--sans); }
+.rtable tfoot td { font-weight: 600; color: var(--forest); border-top: 2px solid var(--forest); border-bottom: 0; padding-top: .8rem; }
+@media (max-width: 860px) { .smart { order: 3; flex-basis: 100%; max-width: none; } .salebar__pick { margin-left: 0; } }
+
+.house .st { border-radius: 8px; white-space: nowrap; }
+.house .out { display: block; font-size: .7rem; margin-top: 4px; opacity: .9; }

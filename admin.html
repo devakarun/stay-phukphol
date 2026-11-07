@@ -52,6 +52,10 @@
           <h2 id="viewTitle">ภาพรวม</h2>
           <p class="muted small" id="todayText"></p>
         </div>
+        <div class="smart" id="smartWrap">
+          <input type="search" id="smart" placeholder="ค้นหาทุกอย่าง: ชื่อ, รหัสจอง, เบอร์โทร, ห้อง, วันที่ เช่น 12/11" autocomplete="off" aria-label="ค้นหาการจอง" />
+          <div class="smart__panel" id="smartPanel" role="listbox"></div>
+        </div>
         <div class="top__right">
           <div class="demo-tools" id="demoTools" hidden>
             <button class="btn btn--ghost btn--sm" id="btnSeed">+ ข้อมูลตัวอย่าง</button>
@@ -67,21 +71,25 @@
         <div class="kpis" id="kpis"></div>
         <div class="grid2">
           <div class="card">
-            <div class="card__head"><h3>สถานะบ้านพักคืนนี้</h3><span class="muted small" id="tonightText"></span></div>
+            <div class="card__head"><h3>สถานะห้องพักคืนนี้</h3><span class="muted small" id="tonightText"></span></div>
             <div class="houses" id="tonight"></div>
+            <div class="legend"><span><i class="lg lg--free"></i>ว่าง</span><span><i class="lg lg--busy"></i>ไม่ว่าง (ยืนยันแล้ว)</span><span><i class="lg lg--busy2"></i>ไม่ว่าง (รอชำระ/รอตรวจ)</span></div>
           </div>
+          <div class="card">
+            <div class="card__head"><h3>เช็กอินวันนี้</h3><span class="pillcount" id="todayCount"></span></div>
+            <p class="muted small" id="todayRooms"></p>
+            <ul class="list checkin" id="todayIn"></ul>
+          </div>
+        </div>
+        <div class="grid2">
           <div class="card">
             <div class="card__head"><h3>เช็กอิน 7 วันข้างหน้า</h3></div>
             <ul class="list" id="upcoming"></ul>
           </div>
-        </div>
-        <div class="card">
-          <div class="card__head"><h3>ว่าง 14 วันข้างหน้า</h3><span class="muted small">จำนวนบ้านว่างต่อคืน</span></div>
-          <div class="strip" id="strip"></div>
-        </div>
-        <div class="card">
-          <div class="card__head"><h3>การจองล่าสุด</h3><button class="link" data-goto="bookings">ดูทั้งหมด →</button></div>
-          <div class="table-wrap"><table class="table" id="latestTable"></table></div>
+          <div class="card">
+            <div class="card__head"><h3>การจองล่าสุด</h3><button class="link" data-goto="bookings">ดูทั้งหมด →</button></div>
+            <div class="table-wrap"><table class="table" id="latestTable"></table></div>
+          </div>
         </div>
       </section>
 
@@ -112,7 +120,7 @@
       <section class="view" data-view="bookings">
         <div class="card">
           <div class="filters">
-            <input type="search" id="q" placeholder="ค้นหาชื่อ, เบอร์, รหัสการจอง..." />
+            <input type="search" id="q" placeholder="ค้นหา: ชื่อ, รหัสจอง, เบอร์, ห้อง, วันที่ เช่น 12/11 หรือ พ.ย." />
             <div class="seg" id="statusFilter">
               <button data-s="all" class="is-active">ทั้งหมด</button>
               <button data-s="pending">รอยืนยัน</button>
@@ -127,17 +135,29 @@
 
       <!-- ยอดขาย -->
       <section class="view" data-view="sales">
-        <div class="cal__bar">
-          <button class="btn btn--ghost btn--sm" id="salePrev">‹</button>
-          <h3 id="saleTitle"></h3>
-          <button class="btn btn--ghost btn--sm" id="saleNext">›</button>
+        <div class="card salebar">
+          <div class="seg" id="salePeriod" role="tablist" aria-label="ช่วงเวลารายงาน">
+            <button data-p="day">รายวัน</button><button data-p="week">รายสัปดาห์</button><button data-p="month" class="is-active">รายเดือน</button>
+            <button data-p="quarter">ราย 3 เดือน</button><button data-p="year">รายปี</button><button data-p="custom">กำหนดเอง</button>
+          </div>
+          <div class="salebar__row">
+            <button class="btn btn--ghost btn--sm" id="salePrev" aria-label="ช่วงก่อนหน้า">‹</button>
+            <div class="salebar__title"><h3 id="saleTitle"></h3><span class="muted small" id="saleRange"></span></div>
+            <button class="btn btn--ghost btn--sm" id="saleNext" aria-label="ช่วงถัดไป">›</button>
+            <div class="salebar__pick" id="salePick"></div>
+            <button class="btn btn--sm" id="btnXlsx">⬇ ส่งออก Excel</button>
+          </div>
         </div>
         <div class="kpis" id="saleKpis"></div>
         <div class="grid2">
-          <div class="card"><div class="card__head"><h3>รายได้รายเดือน</h3><span class="muted small" id="yearText"></span></div><div class="chart"><canvas id="chartYear"></canvas></div></div>
-          <div class="card"><div class="card__head"><h3>รายได้แยกตามบ้าน (เดือนนี้)</h3></div><div class="chart"><canvas id="chartHouse"></canvas></div></div>
+          <div class="card"><div class="card__head"><h3>ห้องที่ลูกค้าพักมากที่สุด</h3><span class="muted small">อันดับ 1–5 ในช่วงที่เลือก</span></div><ol class="rank" id="rank"></ol></div>
+          <div class="card"><div class="card__head"><h3>รายได้ตามช่วงเวลา</h3><span class="muted small" id="trendUnit"></span></div><div class="chart"><canvas id="chartTrend"></canvas></div></div>
         </div>
-        <p class="muted small note">* รายได้นับเฉพาะการจองที่ "ยืนยันแล้ว" และกระจายตามคืนที่เข้าพักจริงในแต่ละเดือน</p>
+        <div class="card">
+          <div class="card__head"><h3>ยอดขายแยกรายห้อง</h3><span class="muted small" id="roomTableNote"></span></div>
+          <div class="table-wrap"><table class="table rtable" id="roomTable"></table></div>
+        </div>
+        <p class="muted small note">* รายได้และจำนวนคืนนับเฉพาะการจองที่ "ยืนยันแล้ว" และนับตามคืนที่เข้าพักจริงในช่วงที่เลือก (จองข้ามเดือนจะถูกแบ่งตามคืน) · ยอด "รอยืนยัน" แสดงแยกเป็นคาดการณ์</p>
       </section>
     </main>
   </div>
@@ -147,6 +167,7 @@
   <div class="toasts" id="toasts"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>

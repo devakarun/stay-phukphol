@@ -274,3 +274,31 @@ details p { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
   * { animation: none !important; transition: none !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* ---------- กิจกรรม ---------- */
+.acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.act { background: #fffdf8; border: 1px solid var(--line); border-radius: 20px; padding: 22px; transition: transform .35s, box-shadow .35s; }
+.act:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+.act h3 { font-size: 1.15rem; margin: .5rem 0 .2rem; }
+.act p { font-size: .92rem; }
+.act__icon { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 16px; background: var(--sand); font-size: 1.5rem; }
+.act--big { grid-column: span 2; grid-row: span 2; background: var(--forest); border: 0; }
+.act--big h3 { color: var(--wheat); font-size: 1.5rem; }
+.act--big .muted { color: var(--sage); }
+.act--big .act__icon { background: rgba(255,255,255,.12); }
+.animals { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 1.2rem; }
+.animals li { background: rgba(255,255,255,.08); color: var(--cream); border-radius: 12px; padding: .65rem .9rem; font-size: .95rem; transition: background .25s, transform .25s; }
+.animals li:hover { background: rgba(255,255,255,.18); transform: translateX(4px); }
+.socials { text-align: center; margin-top: 2.6rem; }
+.socials #socialLinks { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: .7rem; }
+.social { display: inline-flex; align-items: center; gap: .5rem; padding: .55rem 1.1rem; border-radius: 999px; border: 1px solid var(--line); background: #fffdf8; font-size: .9rem; transition: background .25s, color .25s; }
+.social b { font-weight: 600; color: var(--clay); font-size: .78rem; }
+.social:hover { background: var(--forest); color: var(--cream); }
+.social:hover b { color: var(--wheat); }
+.footer__social { font-family: var(--sans) !important; font-size: .9rem !important; margin-top: .6rem; display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem 1.2rem; }
+.promo-tag { display: inline-block; background: var(--sun); color: var(--ink); font-size: .75rem; font-weight: 600; padding: .1rem .6rem; border-radius: 999px; margin-right: .5rem; vertical-align: middle; }
+.price-row s { font-size: 1rem; }
+.res__price s { display: block; font-size: .95rem; }
+.save { display: inline-block; background: var(--sun); color: var(--ink); font-size: .75rem; font-weight: 600; padding: .05rem .55rem; border-radius: 999px; }
+@media (max-width: 900px) { .acts { grid-template-columns: 1fr 1fr; } .act--big { grid-column: 1 / -1; grid-row: auto; } }
+@media (max-width: 560px) { .acts { grid-template-columns: 1fr; } }

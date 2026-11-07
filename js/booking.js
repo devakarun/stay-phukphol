@@ -83,7 +83,7 @@
               <div class="houses-free">${C.houses.map((h) =>
                 `<span class="${S.rooms.includes(h.id) ? "pick" : ""}" style="${free.includes(h.id) ? "" : "opacity:.35;text-decoration:line-through"}">${U.esc(h.name)}</span>`).join("")}</div>
             </div>
-            <div class="res__price"><span class="muted">ราคารวมโดยประมาณ</span><b>${U.money(S.quote.total)}</b>
+            <div class="res__price"><span class="muted">ราคารวม</span>${regularHTML(S.quote, need)}<b>${U.money(S.quote.total)}</b>
               <button class="btn" id="btnNext" style="margin-top:.6rem">จองบ้านหลังนี้ →</button></div>
           </div>`;
         $("#btnNext").onclick = () => goStep(2);
@@ -107,6 +107,12 @@
     }
   }
 
+  // แสดงราคาปกติแบบขีดฆ่า เมื่อมีโปรโมชัน
+  function regularHTML(q, houses) {
+    if (!C.priceRegular) return "";
+    const full = C.priceRegular * q.nights * houses + q.extra, save = full - q.total;
+    return save > 0 ? `<s>${U.money(full)}</s> <span class="save">ประหยัด ${U.money(save)}</span>` : "";
+  }
   function freeHouses(occ, a, b) {
     const busy = new Set(occ.filter((n) => n.date >= a && n.date < b).map((n) => Number(n.room)));
     return C.houses.map((h) => h.id).filter((id) => !busy.has(id));
@@ -154,7 +160,7 @@
         <dt>ค่าห้อง ${q.nights} คืน</dt><dd>${U.money(q.room)}</dd>
         ${S.extraBeds ? `<dt>เตียงเสริม ×${S.extraBeds}</dt><dd>${U.money(q.extra)}</dd>` : ""}
       </dl>
-      <div class="total"><span>รวม</span><b>${U.money(q.total)}</b></div>
+      <div class="total"><span>รวม ${regularHTML(q, S.rooms.length)}</span><b>${U.money(q.total)}</b></div>
       <small>* ยังไม่ต้องชำระเงินตอนนี้ ทีมงานจะติดต่อกลับเพื่อยืนยันภายใน 24 ชม.</small>`;
   }
 

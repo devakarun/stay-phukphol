@@ -10,6 +10,14 @@
     if (v) el.textContent = v;
   });
   $("#priceFrom").textContent = U.money(Math.min(C.priceWeekday, C.priceWeekend));
+  const low = Math.min(C.priceWeekday, C.priceWeekend);
+  if (C.priceRegular && C.priceRegular > low) $("#priceRegular").textContent = U.money(C.priceRegular);
+  else { $(".promo-tag").remove(); $("#priceRegular").remove(); }
+  const soc = C.socials || [];
+  $("#socialLinks").innerHTML = soc.map((x) =>
+    `<a class="social" href="${U.esc(x.url)}" target="_blank" rel="noopener"><b>${U.esc(x.type)}</b>${U.esc(x.name)}</a>`).join("");
+  $("#footSocial").innerHTML = soc.map((x) =>
+    `<a href="${U.esc(x.url)}" target="_blank" rel="noopener">${U.esc(x.type)} · ${U.esc(x.name)}</a>`).join("");
   $("#houseNames").innerHTML = C.houses.map((h) => `<span>${U.esc(h.name)}</span>`).join("");
   $("#cPhone").href = "tel:" + C.contact.phone.replace(/[^0-9+]/g, "");
   $("#cLine").href = "https://line.me/R/ti/p/" + encodeURIComponent(C.contact.line);

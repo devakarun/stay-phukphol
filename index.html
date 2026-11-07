@@ -10,6 +10,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=Jost:wght@300;400;500&family=Taviraj:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/themes.css" />
+  <script src="js/config.js"></script>
+  <script>
+    /* เลือกธีม: ลิงก์ ?theme=... (ไว้ลองดู) หรือค่าใน config.js */
+    (function () { var q = new URLSearchParams(location.search).get("theme"); var t = q || (window.SP_CONFIG && SP_CONFIG.theme) || "earth"; document.documentElement.setAttribute("data-skin", t); })();
+  </script>
 </head>
 <body>
 
@@ -333,6 +339,9 @@
     <p class="muted small">© <span id="year"></span> Baan Phuk Phol · <a href="admin.html">สำหรับเจ้าหน้าที่</a></p>
   </footer>
 
+  <!-- แถบจองติดล่างจอ (มือถือ) -->
+  <div class="mbar" id="mbar"><div class="mbar__price"><small>เริ่มต้น</small><b id="mbarPrice">฿1,450</b><small>ต่อคืน</small></div><a href="#booking" class="btn">จองห้องพัก</a></div>
+
   <!-- Lightbox -->
   <div class="lightbox" id="lightbox"><img alt="" /><button aria-label="ปิด">×</button></div>
 
@@ -342,7 +351,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script src="js/config.js"></script>
   <script src="js/core.js"></script>
   <script src="js/main.js"></script>
   <script src="js/booking.js"></script>

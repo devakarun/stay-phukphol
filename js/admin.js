@@ -358,10 +358,10 @@
     for (let i = 0; i < 42; i++) {
       const d = new Date(start); d.setDate(start.getDate() + i);
       const k = U.toKey(d), bs = onNight(k), f = TOTAL - new Set(bs.flatMap((b) => b.rooms)).size;
-      html += `<div class="day ${d.getMonth() !== m ? "out" : ""} ${k === t ? "today" : ""}" data-day="${k}">
-        <div class="day__n">${d.getDate()}<small class="lv${lv(f)}">ว่าง ${f}</small></div>
+      html += `<div class="day ${d.getMonth() !== m ? "out" : ""} ${k === t ? "today" : ""} ${f === 0 ? "is-full" : ""}" data-day="${k}">
+        <div class="day__n">${d.getDate()}<small class="lv${lv(f)}">${f === 0 ? "เต็ม" : "ว่าง " + f}</small></div>
         <div class="bar"><i style="width:${((TOTAL - f) / TOTAL) * 100}%"></i></div>
-        <div class="chips">${bs.slice(0, 3).map((b) => `<span class="${b.status === "pending" ? "p" : ""}">${U.esc(b.name.split(" ")[0])}</span>`).join("")}${bs.length > 3 ? `<span>+${bs.length - 3}</span>` : ""}</div></div>`;
+        <div class="chips">${bs.flatMap((b) => b.rooms.map((r) => ({ b, r }))).sort((x, y) => x.r - y.r).map(({ b, r }) => `<span class="${b.status === "pending" ? "p" : ""}" title="${U.esc(b.name)}"><b>${U.esc(U.houseName(r))}</b> ${U.esc(b.name.split(" ")[0])}</span>`).join("")}</div></div>`;
       if (i === 34 && new Date(start.getTime() + 35 * 864e5).getMonth() !== m) break;
     }
     $("#calBody").innerHTML = html + "</div>";

@@ -270,3 +270,15 @@ input:focus { outline: 2px solid var(--sage); }
 
 .house .st { border-radius: 8px; white-space: nowrap; }
 .house .out { display: block; font-size: .7rem; margin-top: 4px; opacity: .9; }
+
+/* ---------- ปฏิทิน: ห้องไม่ว่างเป็นสีแดง ---------- */
+.chips span { background: #b3412c; color: #fff; }
+.chips span.p { background: #f6d9cf; color: #8f2f1b; }
+.tl__bk { background: #b3412c; color: #fff; }
+.tl__bk.p { background: #f6d9cf; color: #8f2f1b; border: 1px solid #d9826b; }
+.bar i { background: #b3412c; }
+.lv2 { background: #b3412c; color: #fff; }
+.lg--full { background: #b3412c; }
+.day.is-full { background: #fbe9e4; border-color: #e7b3a5; }
+.day.is-full .day__n { color: #a33a24; }
+.chips span b { font-weight: 600; font-family: "Jost", var(--sans); }

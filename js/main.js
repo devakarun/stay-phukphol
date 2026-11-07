@@ -24,6 +24,15 @@
   $("#mapFrame").src = C.mapEmbedUrl;
   $("#year").textContent = new Date().getFullYear();
 
+  /* แถบจองติดล่างจอบนมือถือ: ซ่อนเมื่ออยู่หน้าแรกหรือส่วนจองอยู่บนจอ */
+  $("#mbarPrice").textContent = U.money(Math.min(...C.rates.map((r) => r.price)));
+  const mbar = $("#mbar"), vis = new Map();
+  const mio = new IntersectionObserver((es) => {
+    es.forEach((e) => vis.set(e.target.id, e.isIntersecting));
+    mbar.classList.toggle("is-hidden", !!(vis.get("top") || vis.get("booking")));
+  }, { threshold: 0.12 });
+  ["top", "booking"].forEach((id) => mio.observe($("#" + id)));
+
   /* เมนูเปลี่ยนสีเมื่อเลื่อน + parallax */
   const nav = $("#nav"), heroBg = $(".hero__bg");
   const onScroll = () => {

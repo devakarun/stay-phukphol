@@ -1,0 +1,89 @@
+/* =========================================================
+   Stay @Phukphol — ธีมสำเร็จรูป
+   เปลี่ยนธีมได้ที่ js/config.js → theme: "earth" | "minimal" | "sunset" | "garden"
+   หรือลองดูก่อนด้วยลิงก์  .../stay-phukphol/?theme=sunset
+   ธีมเปลี่ยนแค่สีและตัวอักษร ไม่กระทบระบบจอง
+   ========================================================= */
+
+/* 1) Earth — ค่าเริ่มต้น (เขียวป่า ครีม ดิน) ใช้ค่าใน style.css */
+
+/* 2) Minimal — ขาวสะอาด ตัวอักษรเรียบ มุมคม ดูโมเดิร์น */
+:root[data-skin="minimal"] {
+  --forest: #1f2b24; --forest-2: #36463c; --moss: #6e7b66; --sage: #c9d0c3;
+  --cream: #ffffff; --sand: #f3f2ee; --wheat: #cbb78f; --clay: #8a6a4b; --sun: #e2b544;
+  --ink: #1d1d1b; --muted: #6d6c66; --line: rgba(20, 30, 24, .12);
+  --radius: 10px; --shadow: 0 14px 40px -24px rgba(0, 0, 0, .28);
+  --serif: "Cormorant Garamond", "Taviraj", serif;
+  --serif-th: "IBM Plex Sans Thai", sans-serif;
+}
+[data-skin="minimal"] h1, [data-skin="minimal"] h2, [data-skin="minimal"] h3 { font-weight: 500; letter-spacing: -.01em; }
+[data-skin="minimal"] .btn { border-radius: 8px; }
+[data-skin="minimal"] .book, [data-skin="minimal"] .house-card, [data-skin="minimal"] .act, [data-skin="minimal"] details { border-radius: 12px; }
+[data-skin="minimal"] .houses, [data-skin="minimal"] .faq { background: #f6f5f1; }
+[data-skin="minimal"] .booking { background: #fff; }
+[data-skin="minimal"] .about__art img { border-radius: 12px; }
+[data-skin="minimal"] .hero__shade { background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.12) 40%, rgba(0,0,0,.55)); }
+
+/* 3) Sunset — โทนพระอาทิตย์ตก ส้มอิฐ ครีมอุ่น ละมุน (เข้ากับภาพหน้าแรก) */
+:root[data-skin="sunset"] {
+  --forest: #a24f2b; --forest-2: #8a4123; --moss: #c98a5a; --sage: #f1caa6;
+  --cream: #fff8f1; --sand: #f8e6d3; --wheat: #f4c78f; --clay: #c0663a; --sun: #f2b94b;
+  --ink: #3a2a21; --muted: #7d665a; --line: rgba(130, 70, 40, .16);
+  --radius: 26px; --shadow: 0 18px 50px -24px rgba(120, 60, 30, .35);
+}
+[data-skin="sunset"] .hero__shade { background: linear-gradient(180deg, rgba(60, 25, 10, .4), rgba(60, 25, 10, .12) 40%, rgba(60, 25, 10, .6)); }
+[data-skin="sunset"] .res--ok { background: #fdf0e3; border-color: #f0cfae; }
+
+/* 4) Garden — เขียวสด เหลืองแดด สดใส เป็นมิตรกับครอบครัว */
+:root[data-skin="garden"] {
+  --forest: #2e6a3b; --forest-2: #3a7d48; --moss: #78a65a; --sage: #cfe3b8;
+  --cream: #fbfdf6; --sand: #edf5e1; --wheat: #f5d35c; --clay: #cf7a36; --sun: #f5c83f;
+  --ink: #23301f; --muted: #5f6d58; --line: rgba(46, 106, 59, .16);
+  --radius: 22px;
+}
+[data-skin="garden"] .btn { border-radius: 14px; }
+[data-skin="garden"] .eyebrow { color: #cf7a36; }
+
+/* ================= ปรับการแสดงผลบนมือถือ (ทุกธีม) ================= */
+.mbar { display: none; }
+@media (max-width: 760px) {
+  body { padding-bottom: 76px; }
+  .section { padding: 60px 0; }
+  .section__head { margin-bottom: 1.8rem; }
+  h2 { font-size: 1.75rem; }
+  .hero__content { padding: 110px 8px 90px; }
+  .hero__lead { font-size: .95rem; }
+  .hero__lead br { display: none; }
+  .about__art img { aspect-ratio: 4 / 3.4; }
+  .stats { gap: 1.4rem; }
+  .stats b { font-size: 2.2rem; }
+  .amenities { grid-template-columns: 1fr 1fr; gap: .6rem; font-size: .86rem; }
+  .amenities i { width: 30px; height: 30px; }
+  .house-card__body { padding: 22px 18px; }
+  .acts { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .act { padding: 14px; }
+  .act h3 { font-size: 1rem; }
+  .act p { font-size: .8rem; line-height: 1.5; }
+  .act__icon { width: 40px; height: 40px; font-size: 1.2rem; border-radius: 12px; }
+  .act--big { grid-column: 1 / -1; }
+  .animals { gap: 6px; } .animals li { font-size: .85rem; padding: .5rem .7rem; }
+  /* แกลเลอรีปัดซ้ายขวา */
+  .gallery__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; margin-inline: -16px; padding: 0 16px 10px; scrollbar-width: none; }
+  .gallery__grid::-webkit-scrollbar { display: none; }
+  .g, .g--tall, .g--wide { flex: 0 0 80%; height: 250px; scroll-snap-align: center; grid-row: auto; grid-column: auto; }
+  .g figcaption { opacity: 1; transform: none; }
+  .route li { font-size: .92rem; }
+  .book { padding: 18px 14px; border-radius: 22px; }
+  .footer { padding-bottom: 96px; }
+  /* แถบจองติดล่างจอ */
+  .mbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    background: color-mix(in srgb, var(--cream) 92%, transparent); backdrop-filter: blur(12px); border-top: 1px solid var(--line);
+    transition: transform .35s ease; }
+  .mbar.is-hidden { transform: translateY(110%); }
+  .mbar__price { display: grid; line-height: 1.2; }
+  .mbar__price small { color: var(--muted); font-size: .72rem; }
+  .mbar__price b { font-family: var(--num); font-weight: 400; font-size: 1.35rem; color: var(--forest); }
+  .mbar .btn { padding: .8rem 1.5rem; }
+}
+[data-skin="garden"] .hero .eyebrow { color: var(--wheat); }

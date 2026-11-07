@@ -3,6 +3,11 @@
    ========================================================= */
 window.SP_CONFIG = {
 
+  /* ---------- 0) ธีมหน้าเว็บ ----------
+     "earth" (ค่าเริ่มต้น) | "minimal" | "sunset" | "garden"
+     ลองดูก่อนเปลี่ยนได้ด้วยลิงก์ เช่น https://devakarun.github.io/stay-phukphol/?theme=sunset */
+  theme: "garden",
+
   /* ---------- 1) Firebase ----------
      คัดลอกค่าจาก Firebase Console > Project settings > Your apps
      ถ้ายังไม่ใส่ (apiKey ยังเป็น "PASTE_...") เว็บจะทำงานใน "โหมดทดลอง"

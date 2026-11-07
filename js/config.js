@@ -40,9 +40,15 @@ window.SP_CONFIG = {
   ],
   maxGuestsPerHouse: 3,      // 2 คน + เตียงเสริม 1
   baseGuestsPerHouse: 2,     // จำนวนคนที่รวมในราคาห้อง
-  priceRegular: 2500,        // ราคาปกติ (แสดงขีดฆ่า) — ใส่ 0 ถ้าไม่มีโปรโมชัน
-  priceWeekday: 1850,        // ราคาที่ลูกค้าจ่ายจริง บาท/คืน (อาทิตย์–พฤหัส)
-  priceWeekend: 1850,        // ราคาที่ลูกค้าจ่ายจริง บาท/คืน (ศุกร์–เสาร์)
+  /* แพ็กเกจราคา (บาท/คืน/หลัง) ลูกค้าเลือกได้ตอนจอง
+     price   = ราคาที่ลูกค้าจ่ายจริง
+     regular = ราคาปกติ แสดงแบบขีดฆ่า (ใส่ 0 ถ้าไม่มีโปรโมชัน)
+     weekendPrice = ราคาคืนศุกร์–เสาร์ (ใส่ 0 = ราคาเดียวกันทุกคืน) */
+  rates: [
+    { id: "room",      name: "ไม่รวมอาหารเช้า", price: 1450, regular: 0,    weekendPrice: 0 },
+    { id: "breakfast", name: "รวมอาหารเช้า",    price: 1850, regular: 2500, weekendPrice: 0 }
+  ],
+  defaultRate: "breakfast",  // แพ็กเกจที่เลือกไว้ให้ก่อน
   extraBedPrice: 300,        // บาท/คืน/เตียง
   maxNights: 14,
   checkInTime: "14:00",

@@ -9,10 +9,9 @@
     const v = el.dataset.cfg.split(".").reduce((o, k) => (o ? o[k] : ""), C);
     if (v) el.textContent = v;
   });
-  $("#priceFrom").textContent = U.money(Math.min(C.priceWeekday, C.priceWeekend));
-  const low = Math.min(C.priceWeekday, C.priceWeekend);
-  if (C.priceRegular && C.priceRegular > low) $("#priceRegular").textContent = U.money(C.priceRegular);
-  else { $(".promo-tag").remove(); $("#priceRegular").remove(); }
+  $("#rateList").innerHTML = C.rates.map((r) => `
+    <li><span class="rates__name">${U.esc(r.name)}${r.regular > r.price ? ' <span class="promo-tag">โปรโมชัน</span>' : ""}</span>
+      <span class="rates__price">${r.regular > r.price ? `<s>${U.money(r.regular)}</s>` : ""}<b>${U.money(r.price)}</b><small>/คืน</small></span></li>`).join("");
   const soc = C.socials || [];
   $("#socialLinks").innerHTML = soc.map((x) =>
     `<a class="social" href="${U.esc(x.url)}" target="_blank" rel="noopener"><b>${U.esc(x.type)}</b>${U.esc(x.name)}</a>`).join("");

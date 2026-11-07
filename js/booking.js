@@ -8,7 +8,7 @@
   if (DB.mode === "demo") $("#demoNote").hidden = false;
   $("#extraBedHint").textContent = "+" + U.money(C.extraBedPrice) + " / คืน / เตียง";
 
-  const S = { checkIn: null, checkOut: null, adults: 2, children: 0, extraBeds: 0, rooms: [], quote: null };
+  const S = { checkIn: null, checkOut: null, adults: 2, children: 0, extraBeds: 0, rooms: [], quote: null, rate: C.defaultRate || C.rates[0].id };
   let fullDates = new Set();
 
   /* ---------- ปฏิทินเลือกวัน ---------- */
@@ -73,7 +73,7 @@
         S.rooms = pickRooms(free, need);
         S.extraBeds = Math.max(0, guests - need * C.baseGuestsPerHouse);
         $("#extraBeds").textContent = S.extraBeds;
-        S.quote = U.quote(S.checkIn, S.checkOut, need, S.extraBeds);
+        S.quote = U.quote(S.checkIn, S.checkOut, need, S.extraBeds, S.rate);
         out.innerHTML = `
           <div class="res res--ok">
             <div>
@@ -83,9 +83,16 @@
               <div class="houses-free">${C.houses.map((h) =>
                 `<span class="${S.rooms.includes(h.id) ? "pick" : ""}" style="${free.includes(h.id) ? "" : "opacity:.35;text-decoration:line-through"}">${U.esc(h.name)}</span>`).join("")}</div>
             </div>
-            <div class="res__price"><span class="muted">ราคารวม</span>${regularHTML(S.quote, need)}<b>${U.money(S.quote.total)}</b>
-              <button class="btn" id="btnNext" style="margin-top:.6rem">จองบ้านหลังนี้ →</button></div>
+            <div class="plans" role="radiogroup" aria-label="เลือกแพ็กเกจ">${C.rates.map((r) => {
+              const q = U.quote(S.checkIn, S.checkOut, need, S.extraBeds, r.id);
+              return `<label class="plan"><input type="radio" name="rate" value="${r.id}" ${r.id === S.rate ? "checked" : ""} />
+                <span class="plan__box"><span class="plan__name">${U.esc(r.name)}</span>
+                <span class="plan__per">${U.money(r.price)} / คืน / หลัง</span>
+                <span class="plan__total">${q.regular > q.total ? `<s>${U.money(q.regular)}</s>` : ""}<b>${U.money(q.total)}</b></span>
+                <span class="plan__note">รวม ${nights} คืน${S.extraBeds ? " + เตียงเสริม" : ""}</span></span></label>`; }).join("")}</div>
+            <div class="res__next"><button class="btn" id="btnNext">จองบ้านหลังนี้ →</button></div>
           </div>`;
+        $$('input[name="rate"]', out).forEach((i) => i.onchange = () => { S.rate = i.value; S.quote = U.quote(S.checkIn, S.checkOut, need, S.extraBeds, S.rate); });
         $("#btnNext").onclick = () => goStep(2);
       } else {
         const alts = findAlternatives(occ, nights, need);
@@ -108,10 +115,9 @@
   }
 
   // แสดงราคาปกติแบบขีดฆ่า เมื่อมีโปรโมชัน
-  function regularHTML(q, houses) {
-    if (!C.priceRegular) return "";
-    const full = C.priceRegular * q.nights * houses + q.extra, save = full - q.total;
-    return save > 0 ? `<s>${U.money(full)}</s> <span class="save">ประหยัด ${U.money(save)}</span>` : "";
+  function regularHTML(q) {
+    const save = q.regular - q.total;
+    return save > 0 ? `<s>${U.money(q.regular)}</s> <span class="save">ประหยัด ${U.money(save)}</span>` : "";
   }
   function freeHouses(occ, a, b) {
     const busy = new Set(occ.filter((n) => n.date >= a && n.date < b).map((n) => Number(n.room)));
@@ -148,7 +154,7 @@
 
   function renderSummary() {
     if (!S.checkIn || !S.rooms.length) return;
-    S.quote = U.quote(S.checkIn, S.checkOut, S.rooms.length, S.extraBeds);
+    S.quote = U.quote(S.checkIn, S.checkOut, S.rooms.length, S.extraBeds, S.rate);
     const q = S.quote;
     $("#summary").innerHTML = `
       <h4>สรุปการจอง</h4>
@@ -157,10 +163,11 @@
         <dt>เช็กเอาต์</dt><dd>${U.thDate(S.checkOut)} · ${C.checkOutTime}</dd>
         <dt>ผู้เข้าพัก</dt><dd>${S.adults} ผู้ใหญ่${S.children ? ", " + S.children + " เด็ก" : ""}</dd>
         <dt>บ้านพัก</dt><dd>${S.rooms.map(U.houseName).join(", ")}</dd>
+        <dt>แพ็กเกจ</dt><dd>${U.esc(q.rate.name)}</dd>
         <dt>ค่าห้อง ${q.nights} คืน</dt><dd>${U.money(q.room)}</dd>
         ${S.extraBeds ? `<dt>เตียงเสริม ×${S.extraBeds}</dt><dd>${U.money(q.extra)}</dd>` : ""}
       </dl>
-      <div class="total"><span>รวม ${regularHTML(q, S.rooms.length)}</span><b>${U.money(q.total)}</b></div>
+      <div class="total"><span>รวม ${regularHTML(q)}</span><b>${U.money(q.total)}</b></div>
       <small>* ยังไม่ต้องชำระเงินตอนนี้ ทีมงานจะติดต่อกลับเพื่อยืนยันภายใน 24 ชม.</small>`;
   }
 
@@ -183,6 +190,7 @@
       checkIn: S.checkIn, checkOut: S.checkOut, nights: S.quote.nights,
       adults: S.adults, children: S.children, rooms: S.rooms,
       extraBeds: S.extraBeds, babyChair: requests.includes("เก้าอี้เด็ก"), requests,
+      rate: S.quote.rate.id, rateName: S.quote.rate.name,
       total: S.quote.total, status: "pending"
     };
 

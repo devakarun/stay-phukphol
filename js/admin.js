@@ -163,7 +163,7 @@
     $("#upcoming").innerHTML = up.length ? up.map((b) => {
       const d = U.fromKey(b.checkIn);
       return `<li data-id="${b.id}"><div class="d"><b>${d.getDate()}</b><small>${d.toLocaleDateString("th-TH", { month: "short" })}</small></div>
-        <div class="x"><div><b>${U.esc(b.name)}</b> · ${b.nights} คืน</div><div class="muted small">${b.rooms.map(U.houseName).join(", ")} · ${b.adults + b.children} ท่าน${b.requests.length ? " · " + U.esc(b.requests.join(", ")) : ""}</div></div>${tag(b.status)}</li>`;
+        <div class="x"><div><b>${U.esc(b.name)}</b> · ${b.nights} คืน</div><div class="muted small">${b.rooms.map(U.houseName).join(", ")} · ${b.adults + b.children} ท่าน${b.rateName === "รวมอาหารเช้า" ? " · 🍳 อาหารเช้า" : ""}${b.requests.length ? " · " + U.esc(b.requests.join(", ")) : ""}</div></div>${tag(b.status)}</li>`;
     }).join("") : `<p class="empty">ไม่มีเช็กอินในสัปดาห์นี้</p>`;
 
     $("#strip").innerHTML = Array.from({ length: 14 }, (_, i) => {
@@ -180,7 +180,7 @@
     return `<thead><tr><th>รหัส</th><th>ลูกค้า</th><th>เข้าพัก</th><th>บ้าน</th><th>ผู้เข้าพัก</th><th>ยอด</th><th>สถานะ</th><th>จองเมื่อ</th></tr></thead><tbody>` +
       rows.map((b) => `<tr class="row ${Date.now() - b.createdAt < 8000 ? "new" : ""}" data-id="${b.id}">
         <td class="code">${b.code}</td><td><b>${U.esc(b.name)}</b><br><span class="muted small">${U.esc(b.phone)}</span></td>
-        <td>${short(b.checkIn)} – ${short(b.checkOut)}<br><span class="muted small">${b.nights} คืน</span></td>
+        <td>${short(b.checkIn)} – ${short(b.checkOut)}<br><span class="muted small">${b.nights} คืน${b.rateName ? " · " + U.esc(b.rateName) : ""}</span></td>
         <td>${b.rooms.map(U.houseName).join("<br>")}</td><td>${b.adults} / ${b.children}${b.extraBeds ? " +เตียง" : ""}</td>
         <td><b>${U.money(b.total)}</b></td><td>${tag(b.status)}</td>
         <td class="muted small">${new Date(b.createdAt).toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</td></tr>`).join("") + "</tbody>";
@@ -196,9 +196,9 @@
     filter = b.dataset.s; $$("#statusFilter button").forEach((x) => x.classList.toggle("is-active", x === b)); renderTable();
   }));
   $("#btnCsv").onclick = () => {
-    const head = ["รหัส", "ชื่อ", "โทร", "อีเมล", "เช็กอิน", "เช็กเอาต์", "คืน", "ผู้ใหญ่", "เด็ก", "บ้าน", "คำขอ", "หมายเหตุ", "ยอด", "สถานะ"];
+    const head = ["รหัส", "ชื่อ", "โทร", "อีเมล", "เช็กอิน", "เช็กเอาต์", "คืน", "ผู้ใหญ่", "เด็ก", "บ้าน", "แพ็กเกจ", "คำขอ", "หมายเหตุ", "ยอด", "สถานะ"];
     const rows = filtered().map((b) => [b.code, b.name, b.phone, b.email, b.checkIn, b.checkOut, b.nights, b.adults, b.children,
-      b.rooms.map(U.houseName).join(" / "), b.requests.join(" / "), b.note, b.total, ST[b.status]]);
+      b.rooms.map(U.houseName).join(" / "), b.rateName || "", b.requests.join(" / "), b.note, b.total, ST[b.status]]);
     const csv = "﻿" + [head, ...rows].map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "bookings-" + U.today() + ".csv"; a.click();
@@ -311,6 +311,7 @@
         <dt>เช็กอิน</dt><dd>${U.thDate(b.checkIn, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} · มาถึงประมาณ ${U.esc(b.arrivalTime || "-")}</dd>
         <dt>เช็กเอาต์</dt><dd>${U.thDate(b.checkOut, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} (${b.nights} คืน)</dd>
         <dt>บ้านพัก</dt><dd>${b.rooms.map(U.houseName).join(", ")}</dd>
+        <dt>แพ็กเกจ</dt><dd><b>${U.esc(b.rateName || "-")}</b></dd>
         <dt>ผู้เข้าพัก</dt><dd>ผู้ใหญ่ ${b.adults} · เด็ก ${b.children}</dd>
         <dt>คำขอเพิ่มเติม</dt><dd>${U.esc(b.requests.join(", ") || "-")}</dd>
         <dt>ข้อความ</dt><dd>${U.esc(b.note || "-")}</dd>

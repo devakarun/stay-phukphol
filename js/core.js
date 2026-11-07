@@ -28,12 +28,16 @@
     },
     housesNeeded(guests) { return Math.ceil(guests / C.maxGuestsPerHouse); },
     /* ราคารวม: ห้อง × คืน (+ เตียงเสริม) */
-    quote(checkIn, checkOut, houses, extraBeds) {
-      const nights = U.nightsBetween(checkIn, checkOut);
-      let room = 0;
-      nights.forEach((k) => { room += (U.isWeekend(k) ? C.priceWeekend : C.priceWeekday) * houses; });
+    rate(id) { return C.rates.find((r) => r.id === id) || C.rates[0]; },
+    quote(checkIn, checkOut, houses, extraBeds, rateId) {
+      const r = U.rate(rateId), nights = U.nightsBetween(checkIn, checkOut);
+      let room = 0, regular = 0;
+      nights.forEach((k) => {
+        const p = U.isWeekend(k) && r.weekendPrice ? r.weekendPrice : r.price;
+        room += p * houses; regular += (r.regular || p) * houses;
+      });
       const extra = nights.length * extraBeds * C.extraBedPrice;
-      return { nights: nights.length, room, extra, total: room + extra };
+      return { nights: nights.length, room, extra, total: room + extra, regular: regular + extra, rate: r };
     },
     makeCode() {
       const s = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c = "SP-";
@@ -147,14 +151,14 @@
         for (let i = 0; i < plan.length; i++) {
           const [off, n, rooms] = plan[i];
           const ci = U.addDays(t, off), co = U.addDays(ci, n), extra = i % 3 === 0 ? 1 : 0;
-          const q = U.quote(ci, co, rooms.length, extra);
+          const rt = C.rates[i % C.rates.length].id, q = U.quote(ci, co, rooms.length, extra, rt);
           try {
             await DB.createBooking({
               code: U.makeCode(), name: names[i % names.length], phone: "080-000-000" + i,
               email: "guest" + i + "@example.com", checkIn: ci, checkOut: co, nights: q.nights,
               adults: rooms.length * 2, children: i % 2, rooms, extraBeds: extra, babyChair: i % 4 === 1,
               requests: extra ? ["เตียงเสริม"] : [], note: "", arrivalTime: "15:00",
-              total: q.total, status: off < 0 ? "confirmed" : i % 2 ? "pending" : "confirmed"
+              rate: rt, rateName: q.rate.name, total: q.total, status: off < 0 ? "confirmed" : i % 2 ? "pending" : "confirmed"
             });
           } catch (e) {}
         }
@@ -173,6 +177,7 @@
       check_in: U.thDate(b.checkIn), check_out: U.thDate(b.checkOut), nights: b.nights,
       guests: b.adults + " ผู้ใหญ่, " + b.children + " เด็ก",
       houses: b.rooms.map(U.houseName).join(", "),
+      rate: b.rateName || "-",
       requests: (b.requests.join(", ") || "-") + (b.note ? " | " + b.note : ""),
       total: U.money(b.total), owner_email: E.ownerEmail, to_email: b.email
     };

@@ -328,3 +328,30 @@ details p { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
 .about__en { font-family: var(--serif); font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.4rem); line-height: 1; }
 .about__th { font-family: var(--serif-th); font-weight: 400; font-size: clamp(1.15rem, 2.2vw, 1.45rem); color: var(--clay); }
 .about__quote { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: clamp(1.35rem, 2.6vw, 1.7rem); color: var(--forest); line-height: 1.35; margin-top: 1.4rem; padding-left: 1rem; border-left: 2px solid var(--wheat); }
+
+/* ---------- แพ็กเกจราคา ---------- */
+.price-row { align-items: flex-end; }
+.rates { list-style: none; display: grid; gap: .55rem; flex: 1; min-width: 230px; }
+.rates li { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: .8rem; }
+.rates li + li { padding-top: .55rem; border-top: 1px dashed var(--line); }
+.rates__name { font-size: .95rem; }
+.rates__name .promo-tag { margin: 0 0 0 .3rem; }
+.rates__price { display: flex; align-items: baseline; gap: .45rem; }
+.rates__price s { font-family: var(--num); font-weight: 300; color: var(--muted); font-size: .95rem; }
+.rates__price b { font-family: var(--num); font-weight: 300; font-size: 1.75rem; color: var(--forest); line-height: 1; }
+.rates__price small { color: var(--muted); }
+.res--ok { grid-template-columns: 1fr; }
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.plan input { position: absolute; opacity: 0; pointer-events: none; }
+.plan__box { display: grid; gap: .1rem; height: 100%; padding: 1rem 1.1rem; border-radius: 16px; background: #fff; border: 1.5px solid var(--line); cursor: pointer; transition: border-color .2s, box-shadow .2s, transform .2s; }
+.plan__box:hover { transform: translateY(-2px); }
+.plan input:checked + .plan__box { border-color: var(--forest); box-shadow: 0 0 0 3px rgba(46,74,44,.12); }
+.plan input:focus-visible + .plan__box { outline: 2px solid var(--moss); outline-offset: 2px; }
+.plan__name { font-weight: 500; color: var(--forest); display: flex; align-items: center; gap: .5rem; }
+.plan__name::before { content: ""; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--moss); flex: none; }
+.plan input:checked + .plan__box .plan__name::before { border: 5px solid var(--forest); }
+.plan__per, .plan__note { font-size: .8rem; color: var(--muted); }
+.plan__total { display: flex; align-items: baseline; gap: .45rem; margin-top: .3rem; }
+.plan__total s { font-family: var(--num); font-weight: 300; color: var(--muted); font-size: .9rem; }
+.plan__total b { font-family: var(--num); font-weight: 300; font-size: 1.8rem; color: var(--forest); line-height: 1.1; }
+.res__next { display: flex; justify-content: flex-end; }

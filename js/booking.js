@@ -67,13 +67,14 @@
     return S.rooms.includes(id) ? "pick" : "free";
   }
   const label = { idle: "", free: "ว่าง", pick: "✓ เลือกแล้ว", full: "เต็ม" };
-  const pinText = { idle: "", free: "ว่าง", pick: '✓<span class="pin__long"> เลือกแล้ว</span>', full: "เต็ม" };
+  // ป้ายบนภาพ: ชื่อห้อง (บนมือถือย่อเหลือ @1) สีบอกสถานะ
+  const pinText = (h, s) => (s === "pick" ? "✓ " : "") + U.esc(h.name).replace(/^([^@]+)@/, '<span class="pin__pre">$1</span>@');
 
   function renderMap() {
     $("#mapPins").innerHTML = C.houses.map((h) => {
       const s = roomState(h.id);
       return `<button type="button" class="pin pin--${s}" data-room="${h.id}" style="left:${h.x}%;top:${h.y}%"
-        aria-label="${U.esc(h.name)} ${label[s] || ""}" ${s === "full" ? 'aria-disabled="true"' : ""}>${s === "idle" ? U.esc(h.name) : pinText[s]}</button>`;
+        aria-label="${U.esc(h.name)} ${label[s] || ""}" ${s === "full" ? 'aria-disabled="true"' : ""}>${pinText(h, s)}</button>`;
     }).join("");
     $("#roomPick").innerHTML = C.houses.map((h) => {
       const s = roomState(h.id);
@@ -209,10 +210,19 @@
       li.classList.toggle("is-active", i + 1 === n);
       li.classList.toggle("is-done", typeof n === "number" && i + 1 < n);
     });
-    if (n === 2) renderSummary();
+    if (n === 2) { renderSummary(); syncTimes(); }
     $(".book").scrollIntoView({ behavior: "smooth" });
   }
   $("#btnBack").onclick = () => goStep(1);
+
+  /* ---------- เวลาเช็กอินก่อนเวลา / เวลารับอาหารเช้า ---------- */
+  $("#earlyTime").innerHTML = C.earlyCheckInTimes.map((t) => `<option>${t}</option>`).join("");
+  $("#bfTime").innerHTML = C.breakfastTimes.map((t) => `<option>${t}</option>`).join("");
+  const syncTimes = () => {
+    $("#earlyField").hidden = !$("#earlyChk").checked;
+    $("#bfField").hidden = !U.rate(S.rate).breakfast;
+  };
+  $("#earlyChk").addEventListener("change", syncTimes);
 
   function renderSummary() {
     if (!S.checkIn || !S.rooms.length) return;
@@ -245,6 +255,9 @@
     if (!f.agree.checked) return (err.textContent = "กรุณายอมรับเงื่อนไขการเข้าพัก");
 
     const requests = $$('input[name="req"]:checked', f).map((c) => c.value);
+    const earlyTime = $("#earlyChk").checked ? f.earlyTime.value : "";
+    const breakfastTime = $("#bfField").hidden ? "" : f.breakfastTime.value;
+    if (earlyTime) requests[requests.indexOf("เช็กอินก่อนเวลา")] = "เช็กอินก่อนเวลา " + earlyTime + " น.";
     if (S.extraBeds) requests.unshift("เตียงเสริม ×" + S.extraBeds);
     const booking = {
       name, phone, email,
@@ -253,6 +266,7 @@
       adults: S.adults, children: S.children, rooms: S.rooms,
       extraBeds: S.extraBeds, babyChair: requests.includes("เก้าอี้เด็ก"), requests,
       rate: S.quote.rate.id, rateName: S.quote.rate.name,
+      earlyCheckIn: earlyTime, breakfastTime,
       total: S.quote.total, status: "pending"
     };
 
@@ -268,7 +282,7 @@
       if (ex.message === "ROOM_TAKEN") {
         goStep(1); S.rooms = [];
         search("มีผู้จองห้องที่เลือกไปก่อนหน้าเพียงไม่กี่วินาที ระบบเลือกห้องใหม่ให้แล้ว");
-      } else err.textContent = "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อเราทางโทรศัพท์";
+      } else err.textContent = "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อเราทางโทรศัพท์" + (ex.code ? " (" + ex.code + ")" : "");
     } finally { btn.disabled = false; btn.textContent = "ไปขั้นตอนชำระเงิน →"; }
   });
   $("#btnSubmit").textContent = "ไปขั้นตอนชำระเงิน →";

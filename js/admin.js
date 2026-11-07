@@ -182,7 +182,7 @@
     $("#upcoming").innerHTML = up.length ? up.map((b) => {
       const d = U.fromKey(b.checkIn);
       return `<li data-id="${b.id}"><div class="d"><b>${d.getDate()}</b><small>${d.toLocaleDateString("th-TH", { month: "short" })}</small></div>
-        <div class="x"><div><b>${U.esc(b.name)}</b> · ${b.nights} คืน</div><div class="muted small">${b.rooms.map(U.houseName).join(", ")} · ${b.adults + b.children} ท่าน${b.rateName === "รวมอาหารเช้า" ? " · 🍳 อาหารเช้า" : ""}${b.requests.length ? " · " + U.esc(b.requests.join(", ")) : ""}</div></div>${tag(b)}</li>`;
+        <div class="x"><div><b>${U.esc(b.name)}</b> · ${b.nights} คืน</div><div class="muted small">${b.rooms.map(U.houseName).join(", ")} · ${b.adults + b.children} ท่าน${b.rateName === "รวมอาหารเช้า" ? " · 🍳 อาหารเช้า" + (b.breakfastTime ? " " + U.esc(b.breakfastTime) : "") : ""}${b.requests.length ? " · " + U.esc(b.requests.join(", ")) : ""}</div></div>${tag(b)}</li>`;
     }).join("") : `<p class="empty">ไม่มีเช็กอินในสัปดาห์นี้</p>`;
 
     $("#strip").innerHTML = Array.from({ length: 14 }, (_, i) => {
@@ -337,7 +337,8 @@
           <dt>เช็กอิน</dt><dd>${U.thDate(b.checkIn, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} · มาถึงประมาณ ${U.esc(b.arrivalTime || "-")}</dd>
           <dt>เช็กเอาต์</dt><dd>${U.thDate(b.checkOut, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} (${b.nights} คืน)</dd>
           <dt>ห้องพัก</dt><dd><b>${b.rooms.map(U.houseName).join(", ")}</b></dd>
-          <dt>แพ็กเกจ</dt><dd><b>${U.esc(b.rateName || "-")}</b></dd>
+          <dt>แพ็กเกจ</dt><dd><b>${U.esc(b.rateName || "-")}</b>${b.breakfastTime ? ` · 🍳 รับอาหารเช้า ${U.esc(b.breakfastTime)} น.` : ""}</dd>
+          ${b.earlyCheckIn ? `<dt>เช็กอินก่อนเวลา</dt><dd><b>${U.esc(b.earlyCheckIn)} น.</b></dd>` : ""}
           <dt>ผู้เข้าพัก</dt><dd>ผู้ใหญ่ ${b.adults} · เด็ก ${b.children}</dd>
           <dt>คำขอเพิ่มเติม</dt><dd>${U.esc(b.requests.join(", ") || "-")}</dd>
           <dt>ข้อความ</dt><dd>${U.esc(b.note || "-")}</dd>

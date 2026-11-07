@@ -33,11 +33,11 @@ window.SP_CONFIG = {
   /* ---------- 4) ห้องพักและราคา ---------- */
   houses: [
     // x, y = ตำแหน่งป้ายสถานะบนภาพแผนที่ (เปอร์เซ็นต์จากซ้าย / จากบน)
-    { id: 1, name: "Stay@1", x: 87.0, y: 39.0 },
-    { id: 2, name: "Stay@2", x: 73.3, y: 41.5 },
-    { id: 3, name: "Stay@3", x: 59.5, y: 44.2 },
-    { id: 4, name: "Stay@4", x: 43.4, y: 47.0 },
-    { id: 5, name: "Stay@5", x: 26.0, y: 50.5 }
+    { id: 1, name: "Stay@1", x: 85.4, y: 38.4 },
+    { id: 2, name: "Stay@2", x: 73.0, y: 40.4 },
+    { id: 3, name: "Stay@3", x: 59.1, y: 42.6 },
+    { id: 4, name: "Stay@4", x: 43.4, y: 45.0 },
+    { id: 5, name: "Stay@5", x: 24.3, y: 47.4 }
   ],
   roomMapImage: "images/room-map.jpg",
 
@@ -69,9 +69,11 @@ window.SP_CONFIG = {
      weekendPrice = ราคาคืนศุกร์–เสาร์ (ใส่ 0 = ราคาเดียวกันทุกคืน) */
   rates: [
     { id: "room",      name: "ไม่รวมอาหารเช้า", price: 1450, regular: 0,    weekendPrice: 0 },
-    { id: "breakfast", name: "รวมอาหารเช้า",    price: 1850, regular: 2500, weekendPrice: 0 }
+    { id: "breakfast", name: "รวมอาหารเช้า",    price: 1850, regular: 2500, weekendPrice: 0, breakfast: true }
   ],
   defaultRate: "breakfast",  // แพ็กเกจที่เลือกไว้ให้ก่อน
+  breakfastTimes: ["07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00"],  // เวลารับอาหารเช้าที่ให้เลือก
+  earlyCheckInTimes: ["09:00", "10:00", "11:00", "12:00", "13:00"],               // เวลาเช็กอินก่อนเวลาที่ให้เลือก
   extraBedPrice: 300,        // บาท/คืน/เตียง
   maxNights: 14,
   checkInTime: "14:00",

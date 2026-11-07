@@ -241,11 +241,15 @@
                 </div>
                 <label class="chip"><input type="checkbox" name="req" value="เก้าอี้เด็ก" /><span>👶 เก้าอี้เด็ก</span></label>
                 <label class="chip"><input type="checkbox" name="req" value="เตียงเด็กอ่อน" /><span>🍼 เตียงเด็กอ่อน</span></label>
-                <label class="chip"><input type="checkbox" name="req" value="เช็กอินล่วงหน้า" /><span>⏰ เช็กอินก่อนเวลา</span></label>
+                <label class="chip"><input type="checkbox" name="req" value="เช็กอินก่อนเวลา" id="earlyChk" /><span>⏰ เช็กอินก่อนเวลา</span></label>
                 <label class="chip"><input type="checkbox" name="req" value="ฉลองวันพิเศษ" /><span>🎂 ฉลองวันพิเศษ</span></label>
                 <label class="chip"><input type="checkbox" name="req" value="ขอบ้านติดกัน" /><span>🏡 ขอบ้านติดกัน</span></label>
               </div>
-              <label class="field"><span>ข้อความถึงเรา</span><textarea name="note" rows="3" placeholder="เช่น แพ้อาหาร, มีสัตว์เลี้ยง, ต้องการรถรับส่ง"></textarea></label>
+              <div class="form__row timeopts">
+                <label class="field" id="earlyField" hidden><span>⏰ เวลาที่ต้องการเช็กอิน</span><select name="earlyTime" id="earlyTime"></select></label>
+                <label class="field" id="bfField" hidden><span>🍳 เวลารับอาหารเช้า</span><select name="breakfastTime" id="bfTime"></select></label>
+              </div>
+              <label class="field"><span>ข้อความถึงเรา</span><textarea name="note" rows="3" placeholder="เช่น แพ้อาหาร,มีโรคประจำตัว หรืออื่นๆ"></textarea></label>
               <label class="check"><input type="checkbox" name="agree" required /> ยอมรับเงื่อนไขการเข้าพักและนโยบายความเป็นส่วนตัว</label>
               <p class="form__error" id="formError"></p>
               <div class="form__actions">

@@ -1,0 +1,42 @@
+rules_version = '2';
+
+// =========================================================
+// Stay @Phukphol — กฎความปลอดภัย Firestore
+// คัดลอกทั้งหมดไปวางใน Firebase Console > Firestore > Rules แล้วกด Publish
+// ** เปลี่ยนอีเมลด้านล่างให้เป็นอีเมลแอดมินของคุณ **
+// =========================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in ['dc99degrees@gmail.com'];
+    }
+
+    // ตารางห้องที่ถูกจองต่อคืน (ไม่มีข้อมูลส่วนตัว — ลูกค้าอ่านได้เพื่อเช็กห้องว่าง)
+    // เอกสาร id = "2026-12-24_3"  (วันที่_เลขบ้าน)
+    match /roomNights/{id} {
+      allow read: if true;
+      // สร้างได้เฉพาะเมื่อยังไม่มีคนจอง (ป้องกันการจองซ้อน)
+      allow create: if request.resource.data.keys().hasOnly(['date', 'room', 'bookingId'])
+        && request.resource.data.room is int
+        && request.resource.data.room >= 1 && request.resource.data.room <= 5
+        && request.resource.data.date is string
+        && id == request.resource.data.date + '_' + string(request.resource.data.room);
+      allow update, delete: if isAdmin();
+    }
+
+    // ข้อมูลการจอง (มีข้อมูลส่วนตัว — เฉพาะแอดมินที่อ่านได้)
+    match /bookings/{id} {
+      allow create: if request.resource.data.status == 'pending'
+        && request.resource.data.name is string && request.resource.data.name.size() < 120
+        && request.resource.data.phone is string && request.resource.data.phone.size() < 30
+        && request.resource.data.email is string && request.resource.data.email.size() < 120
+        && request.resource.data.note is string && request.resource.data.note.size() <= 1000
+        && request.resource.data.rooms is list && request.resource.data.rooms.size() >= 1
+        && request.resource.data.total is number
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

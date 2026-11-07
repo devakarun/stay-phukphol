@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Dashboard · Stay @Phukphol</title>
+  <link rel="icon" href="images/favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+  <!-- ========== หน้าเข้าสู่ระบบ ========== -->
+  <div class="login" id="login">
+    <form class="login__card" id="loginForm">
+      <img src="images/logo.png" alt="" />
+      <h1>Stay <em>@Phukphol</em></h1>
+      <p class="muted">ระบบหลังบ้าน สำหรับเจ้าหน้าที่</p>
+      <label><span>อีเมล</span><input name="email" type="email" required autocomplete="username" /></label>
+      <label><span>รหัสผ่าน</span><input name="password" type="password" required autocomplete="current-password" /></label>
+      <p class="err" id="loginErr"></p>
+      <button class="btn" type="submit">เข้าสู่ระบบ</button>
+      <p class="demo-tip" id="demoTip" hidden>🧪 โหมดทดลอง: ใส่อีเมลและรหัสผ่านอะไรก็ได้</p>
+      <a href="index.html" class="muted small">← กลับหน้าเว็บไซต์</a>
+    </form>
+  </div>
+
+  <!-- ========== Dashboard ========== -->
+  <div class="app" id="app" hidden>
+    <aside class="side" id="side">
+      <a class="side__brand" href="index.html" target="_blank">
+        <img src="images/logo.png" alt="" /><span>Stay <em>@Phukphol</em></span>
+      </a>
+      <nav class="side__nav">
+        <button data-view="overview" class="is-active"><i>◐</i>ภาพรวม</button>
+        <button data-view="calendar"><i>▦</i>ปฏิทินการจอง</button>
+        <button data-view="bookings"><i>☰</i>รายการจอง <b class="pill" id="pendingPill" hidden>0</b></button>
+        <button data-view="sales"><i>฿</i>สรุปยอดขาย</button>
+      </nav>
+      <div class="side__foot">
+        <div class="mode" id="modeTag"></div>
+        <small id="userEmail"></small>
+        <button class="link" id="btnLogout">ออกจากระบบ</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="top">
+        <button class="top__menu" id="menuBtn" aria-label="เมนู">☰</button>
+        <div>
+          <h2 id="viewTitle">ภาพรวม</h2>
+          <p class="muted small" id="todayText"></p>
+        </div>
+        <div class="top__right">
+          <div class="demo-tools" id="demoTools" hidden>
+            <button class="btn btn--ghost btn--sm" id="btnSeed">+ ข้อมูลตัวอย่าง</button>
+            <button class="btn btn--ghost btn--sm" id="btnClear">ล้างข้อมูล</button>
+          </div>
+          <button class="bell" id="bell" aria-label="การแจ้งเตือน">🔔<b id="bellCount" hidden>0</b></button>
+          <div class="bell__panel" id="bellPanel"></div>
+        </div>
+      </header>
+
+      <!-- ภาพรวม -->
+      <section class="view is-active" data-view="overview">
+        <div class="kpis" id="kpis"></div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card__head"><h3>สถานะบ้านพักคืนนี้</h3><span class="muted small" id="tonightText"></span></div>
+            <div class="houses" id="tonight"></div>
+          </div>
+          <div class="card">
+            <div class="card__head"><h3>เช็กอิน 7 วันข้างหน้า</h3></div>
+            <ul class="list" id="upcoming"></ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__head"><h3>ว่าง 14 วันข้างหน้า</h3><span class="muted small">จำนวนบ้านว่างต่อคืน</span></div>
+          <div class="strip" id="strip"></div>
+        </div>
+        <div class="card">
+          <div class="card__head"><h3>การจองล่าสุด</h3><button class="link" data-goto="bookings">ดูทั้งหมด →</button></div>
+          <div class="table-wrap"><table class="table" id="latestTable"></table></div>
+        </div>
+      </section>
+
+      <!-- ปฏิทิน -->
+      <section class="view" data-view="calendar">
+        <div class="card">
+          <div class="cal__bar">
+            <button class="btn btn--ghost btn--sm" id="calPrev">‹</button>
+            <h3 id="calTitle"></h3>
+            <button class="btn btn--ghost btn--sm" id="calNext">›</button>
+            <button class="btn btn--ghost btn--sm" id="calToday">วันนี้</button>
+            <div class="seg" id="calMode">
+              <button data-m="month" class="is-active">รายเดือน</button>
+              <button data-m="timeline">รายหลัง</button>
+            </div>
+          </div>
+          <div id="calBody"></div>
+          <div class="legend">
+            <span><i class="lg lg--free"></i>ว่างทั้งหมด</span>
+            <span><i class="lg lg--some"></i>ว่างบางหลัง</span>
+            <span><i class="lg lg--full"></i>เต็ม</span>
+            <span><i class="lg lg--pending"></i>รอยืนยัน</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- รายการจอง -->
+      <section class="view" data-view="bookings">
+        <div class="card">
+          <div class="filters">
+            <input type="search" id="q" placeholder="ค้นหาชื่อ, เบอร์, รหัสการจอง..." />
+            <div class="seg" id="statusFilter">
+              <button data-s="all" class="is-active">ทั้งหมด</button>
+              <button data-s="pending">รอยืนยัน</button>
+              <button data-s="confirmed">ยืนยันแล้ว</button>
+              <button data-s="cancelled">ยกเลิก</button>
+            </div>
+            <button class="btn btn--ghost btn--sm" id="btnCsv">⬇ ส่งออก CSV</button>
+          </div>
+          <div class="table-wrap"><table class="table" id="allTable"></table></div>
+        </div>
+      </section>
+
+      <!-- ยอดขาย -->
+      <section class="view" data-view="sales">
+        <div class="cal__bar">
+          <button class="btn btn--ghost btn--sm" id="salePrev">‹</button>
+          <h3 id="saleTitle"></h3>
+          <button class="btn btn--ghost btn--sm" id="saleNext">›</button>
+        </div>
+        <div class="kpis" id="saleKpis"></div>
+        <div class="grid2">
+          <div class="card"><div class="card__head"><h3>รายได้รายเดือน</h3><span class="muted small" id="yearText"></span></div><div class="chart"><canvas id="chartYear"></canvas></div></div>
+          <div class="card"><div class="card__head"><h3>รายได้แยกตามบ้าน (เดือนนี้)</h3></div><div class="chart"><canvas id="chartHouse"></canvas></div></div>
+        </div>
+        <p class="muted small note">* รายได้นับเฉพาะการจองที่ "ยืนยันแล้ว" และกระจายตามคืนที่เข้าพักจริงในแต่ละเดือน</p>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal"><div class="modal__box"><button class="modal__x" data-close>×</button><div id="modalBody"></div></div></div>
+  <div class="toasts" id="toasts"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stay @Phukphol | สเตย์ แอท บ้านปลูกผล รีสอร์ต พังงา</title>
+  <meta name="description" content="บ้านพักหลังเล็ก 5 หลัง ท่ามกลางหุบเขาในพังงา — Stay @Phukphol สเตย์ แอท บ้านปลูกผล รีสอร์ต" />
+  <link rel="icon" href="images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=Noto+Serif+Thai:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ================= เมนูด้านบน ================= -->
+  <header class="nav" id="nav">
+    <a href="#top" class="nav__brand">
+      <img src="images/logo.png" alt="โลโก้ บ้านปลูกผล" />
+      <span>Stay <em>@Phukphol</em></span>
+    </a>
+    <nav class="nav__links" id="navLinks">
+      <a href="#about">เรื่องราว</a>
+      <a href="#houses">บ้านพัก</a>
+      <a href="#gallery">บรรยากาศ</a>
+      <a href="#location">การเดินทาง</a>
+      <a href="#booking" class="btn btn--small">จองห้องพัก</a>
+    </nav>
+    <button class="nav__burger" id="burger" aria-label="เปิดเมนู"><span></span><span></span></button>
+  </header>
+
+  <!-- ================= HERO ================= -->
+  <section class="hero" id="top">
+    <div class="hero__bg" style="background-image:url('images/hero.jpg')"></div>
+    <div class="hero__shade"></div>
+    <div class="hero__content">
+      <p class="eyebrow reveal">Phang Nga · Valley Hideaway</p>
+      <h1 class="hero__title reveal">Stay <em>@Phukphol</em></h1>
+      <p class="hero__th reveal">สเตย์ แอท บ้านปลูกผล รีสอร์ต</p>
+      <p class="hero__lead reveal">บ้านหลังเล็ก 5 หลัง ซ่อนตัวอยู่ในมุมหุบเขา<br />ตื่นมากับหมอก เสียงนก และกาแฟแก้วโปรด</p>
+      <div class="hero__cta reveal">
+        <a href="#booking" class="btn">เช็กห้องว่าง</a>
+        <a href="#houses" class="btn btn--ghost">ดูบ้านพัก</a>
+      </div>
+    </div>
+    <a href="#about" class="hero__scroll" aria-label="เลื่อนลง"><span></span></a>
+  </section>
+
+  <!-- ================= ABOUT ================= -->
+  <section class="section about" id="about">
+    <div class="container about__grid">
+      <div class="about__text">
+        <p class="eyebrow reveal">Our Story</p>
+        <h2 class="reveal">ช้าลงสักนิด<br />ที่บ้านปลูกผล</h2>
+        <p class="reveal">Stay @Phukphol คือบ้านพักเล็ก ๆ ข้างคาเฟ่และร้านอาหารบ้านปลูกผล เราตั้งใจสร้างบ้านเพียง 5 หลัง
+          เพื่อให้ทุกคนได้พื้นที่ส่วนตัว ท่ามกลางภูเขา สวนผลไม้ และอากาศบริสุทธิ์ของพังงา</p>
+        <p class="reveal">เช้าเดินเล่นในสวน กลางวันนั่งจิบกาแฟที่คาเฟ่ ตกเย็นนั่งมองพระอาทิตย์ลับเขาที่ระเบียงบ้าน — Good Food, Good Mood.</p>
+        <div class="stats reveal">
+          <div><b data-count="5">0</b><span>บ้านพัก</span></div>
+          <div><b data-count="1">0</b><span>ห้องนอน / หลัง</span></div>
+          <div><b data-count="3">0</b><span>ผู้เข้าพักสูงสุด / หลัง</span></div>
+        </div>
+      </div>
+      <div class="about__art reveal">
+        <img src="images/logo-square.jpg" alt="ภาพบ้านปลูกผล" loading="lazy" />
+        <div class="about__badge">
+          <span>Check-in</span><b data-cfg="checkInTime">14:00</b>
+          <span>Check-out</span><b data-cfg="checkOutTime">12:00</b>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOUSES ================= -->
+  <section class="section houses" id="houses">
+    <div class="container">
+      <div class="section__head">
+        <p class="eyebrow reveal">The Houses</p>
+        <h2 class="reveal">บ้านหลังเล็ก ที่อบอุ่นพอดี</h2>
+        <p class="muted reveal">ทุกหลังมี 1 ห้องนอน 1 ห้องน้ำ ระเบียงส่วนตัว และวิวหุบเขา</p>
+      </div>
+
+      <div class="house-card reveal">
+        <div class="house-card__slides" id="houseSlides">
+          <img src="images/house-1.jpg" alt="ภายในบ้านพัก" class="is-active" />
+          <img src="images/house-2.jpg" alt="ห้องนอน" />
+          <img src="images/house-3.jpg" alt="ระเบียงวิวเขา" />
+          <div class="house-card__dots"></div>
+        </div>
+        <div class="house-card__body">
+          <h3>Valley House</h3>
+          <p class="muted">บ้านเดี่ยวสไตล์มินิมอล ไม้และปูนเปลือย เปิดหน้าต่างรับลมเย็นจากภูเขา</p>
+          <ul class="amenities">
+            <li><i>🛏️</i>เตียง Queen size</li>
+            <li><i>🚿</i>ห้องน้ำในตัว น้ำอุ่น</li>
+            <li><i>❄️</i>เครื่องปรับอากาศ</li>
+            <li><i>📶</i>Wi-Fi ฟรี</li>
+            <li><i>☕</i>กาแฟ & ชา</li>
+            <li><i>🌿</i>ระเบียงส่วนตัว</li>
+            <li><i>🅿️</i>ที่จอดรถหน้าบ้าน</li>
+            <li><i>🍳</i>อาหารเช้าที่คาเฟ่</li>
+          </ul>
+          <div class="price-row">
+            <div><span class="muted">เริ่มต้น</span><b id="priceFrom">฿1,500</b><span class="muted">/คืน</span></div>
+            <a href="#booking" class="btn">จองเลย</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="house-names" id="houseNames"></div>
+    </div>
+  </section>
+
+  <!-- ================= GALLERY ================= -->
+  <section class="section gallery" id="gallery">
+    <div class="container">
+      <div class="section__head">
+        <p class="eyebrow reveal">Moments</p>
+        <h2 class="reveal">บรรยากาศรอบบ้าน</h2>
+      </div>
+      <div class="gallery__grid">
+        <figure class="g g--tall reveal"><img src="images/gallery-1.jpg" alt="หมอกยามเช้า" loading="lazy" /><figcaption>หมอกยามเช้า</figcaption></figure>
+        <figure class="g reveal"><img src="images/gallery-2.jpg" alt="สวนผลไม้" loading="lazy" /><figcaption>สวนผลไม้</figcaption></figure>
+        <figure class="g reveal"><img src="images/gallery-3.jpg" alt="คาเฟ่บ้านปลูกผล" loading="lazy" /><figcaption>คาเฟ่บ้านปลูกผล</figcaption></figure>
+        <figure class="g g--wide reveal"><img src="images/gallery-4.jpg" alt="วิวหุบเขา" loading="lazy" /><figcaption>วิวหุบเขา</figcaption></figure>
+        <figure class="g reveal"><img src="images/gallery-5.jpg" alt="ระเบียงบ้าน" loading="lazy" /><figcaption>ระเบียงบ้าน</figcaption></figure>
+        <figure class="g reveal"><img src="images/gallery-6.jpg" alt="ยามเย็น" loading="lazy" /><figcaption>ยามเย็น</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BOOKING ================= -->
+  <section class="section booking" id="booking">
+    <div class="container">
+      <div class="section__head">
+        <p class="eyebrow reveal">Reservation</p>
+        <h2 class="reveal">จองห้องพัก</h2>
+        <p class="muted reveal">เลือกวันเข้าพักและจำนวนผู้เข้าพัก ระบบจะค้นหาบ้านที่ว่างให้อัตโนมัติ</p>
+      </div>
+
+      <div class="demo-note" id="demoNote" hidden>
+        🧪 <b>โหมดทดลอง</b> — ยังไม่ได้เชื่อม Firebase ข้อมูลการจองจะถูกเก็บในเบราว์เซอร์นี้เท่านั้น
+      </div>
+
+      <div class="book reveal">
+        <ol class="steps" id="steps">
+          <li class="is-active"><span>1</span>วันที่ & ผู้เข้าพัก</li>
+          <li><span>2</span>ข้อมูลผู้จอง</li>
+          <li><span>3</span>ยืนยัน</li>
+        </ol>
+
+        <!-- STEP 1 -->
+        <div class="step is-active" data-step="1">
+          <div class="search">
+            <label class="field field--dates">
+              <span>วันเข้าพัก — วันออก</span>
+              <input type="text" id="dates" placeholder="เลือกช่วงวันที่" readonly />
+            </label>
+            <div class="field">
+              <span>ผู้ใหญ่</span>
+              <div class="counter" data-for="adults"><button type="button" data-d="-1">−</button><b id="adults">2</b><button type="button" data-d="1">+</button></div>
+            </div>
+            <div class="field">
+              <span>เด็ก (ต่ำกว่า 12 ปี)</span>
+              <div class="counter" data-for="children"><button type="button" data-d="-1">−</button><b id="children">0</b><button type="button" data-d="1">+</button></div>
+            </div>
+            <button class="btn" id="btnSearch">ค้นหาห้องว่าง</button>
+          </div>
+          <div class="result" id="result"></div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step" data-step="2">
+          <div class="step2">
+            <form id="guestForm" class="form" novalidate>
+              <div class="form__row">
+                <label class="field"><span>ชื่อ–นามสกุล *</span><input name="name" required autocomplete="name" /></label>
+                <label class="field"><span>เบอร์โทรศัพท์ *</span><input name="phone" required inputmode="tel" autocomplete="tel" /></label>
+              </div>
+              <div class="form__row">
+                <label class="field"><span>อีเมล *</span><input name="email" type="email" required autocomplete="email" /></label>
+                <label class="field"><span>เวลาที่คาดว่าจะมาถึง</span>
+                  <select name="arrivalTime">
+                    <option>14:00</option><option>15:00</option><option>16:00</option><option>17:00</option>
+                    <option>18:00</option><option>19:00</option><option>20:00 หรือหลังจากนั้น</option>
+                  </select>
+                </label>
+              </div>
+
+              <p class="form__label">คำขอเพิ่มเติม</p>
+              <div class="extras">
+                <div class="extra">
+                  <div><b>เตียงเสริม</b><small id="extraBedHint">+฿300 / คืน</small></div>
+                  <div class="counter" data-for="extraBeds"><button type="button" data-d="-1">−</button><b id="extraBeds">0</b><button type="button" data-d="1">+</button></div>
+                </div>
+                <label class="chip"><input type="checkbox" name="req" value="เก้าอี้เด็ก" /><span>👶 เก้าอี้เด็ก</span></label>
+                <label class="chip"><input type="checkbox" name="req" value="เตียงเด็กอ่อน" /><span>🍼 เตียงเด็กอ่อน</span></label>
+                <label class="chip"><input type="checkbox" name="req" value="เช็กอินล่วงหน้า" /><span>⏰ เช็กอินก่อนเวลา</span></label>
+                <label class="chip"><input type="checkbox" name="req" value="ฉลองวันพิเศษ" /><span>🎂 ฉลองวันพิเศษ</span></label>
+                <label class="chip"><input type="checkbox" name="req" value="ขอบ้านติดกัน" /><span>🏡 ขอบ้านติดกัน</span></label>
+              </div>
+              <label class="field"><span>ข้อความถึงเรา</span><textarea name="note" rows="3" placeholder="เช่น แพ้อาหาร, มีสัตว์เลี้ยง, ต้องการรถรับส่ง"></textarea></label>
+              <label class="check"><input type="checkbox" name="agree" required /> ยอมรับเงื่อนไขการเข้าพักและนโยบายความเป็นส่วนตัว</label>
+              <p class="form__error" id="formError"></p>
+              <div class="form__actions">
+                <button type="button" class="btn btn--ghost dark" id="btnBack">← ย้อนกลับ</button>
+                <button type="submit" class="btn" id="btnSubmit">ยืนยันการจอง</button>
+              </div>
+            </form>
+            <aside class="summary" id="summary"></aside>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step" data-step="3">
+          <div class="done" id="done"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LOCATION ================= -->
+  <section class="section location" id="location">
+    <div class="container location__grid">
+      <div>
+        <p class="eyebrow reveal">Getting Here</p>
+        <h2 class="reveal">การเดินทาง</h2>
+        <p class="muted reveal" data-cfg="contact.address">ที่อยู่</p>
+        <ul class="route reveal">
+          <li><b>✈️ จากสนามบินภูเก็ต</b><span>ขับรถผ่านสะพานสารสิน เข้าสู่ถนนเพชรเกษม (ทล.4) มุ่งหน้าพังงา</span></li>
+          <li><b>🚗 จากตัวเมืองพังงา</b><span>ใช้ถนนสายหลัก แล้วเลี้ยวตามป้าย "บ้านปลูกผล"</span></li>
+          <li><b>📍 จุดสังเกต</b><span>อยู่ติดกับคาเฟ่และร้านอาหารบ้านปลูกผล มีที่จอดรถกว้าง</span></li>
+        </ul>
+        <div class="contact reveal">
+          <a id="cPhone" href="#">📞 <span data-cfg="contact.phone"></span></a>
+          <a id="cLine" href="#">💬 LINE <span data-cfg="contact.line"></span></a>
+          <a id="cMap" href="#" target="_blank" rel="noopener" class="btn btn--small">เปิด Google Maps</a>
+        </div>
+      </div>
+      <div class="map reveal"><iframe id="mapFrame" title="แผนที่" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="section faq">
+    <div class="container narrow">
+      <div class="section__head"><p class="eyebrow reveal">Good to know</p><h2 class="reveal">ข้อมูลน่ารู้</h2></div>
+      <details class="reveal"><summary>เวลาเช็กอิน / เช็กเอาต์</summary><p>เช็กอินตั้งแต่ <b data-cfg="checkInTime"></b> และเช็กเอาต์ก่อน <b data-cfg="checkOutTime"></b></p></details>
+      <details class="reveal"><summary>บ้านหนึ่งหลังพักได้กี่คน?</summary><p>พักได้ 2 ท่านตามราคาห้อง และเพิ่มเตียงเสริมได้อีก 1 ท่าน (สูงสุด 3 ท่าน/หลัง) หากมาหลายคน ระบบจะจัดบ้านให้หลายหลังโดยอัตโนมัติ</p></details>
+      <details class="reveal"><summary>ชำระเงินอย่างไร?</summary><p>หลังส่งคำขอจอง ทีมงานจะติดต่อกลับเพื่อยืนยันห้องและแจ้งช่องทางชำระเงินภายใน 24 ชั่วโมง</p></details>
+      <details class="reveal"><summary>นำสัตว์เลี้ยงมาได้ไหม?</summary><p>กรุณาแจ้งในช่อง "ข้อความถึงเรา" ขณะจอง เพื่อให้ทีมงานตรวจสอบและยืนยันอีกครั้ง</p></details>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <img src="images/logo.png" alt="" />
+    <p>Stay @Phukphol · สเตย์ แอท บ้านปลูกผล รีสอร์ต</p>
+    <p class="muted">Good Food · Good Mood</p>
+    <p class="muted small">© <span id="year"></span> Baan Phuk Phol · <a href="admin.html">สำหรับเจ้าหน้าที่</a></p>
+  </footer>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox"><img alt="" /><button aria-label="ปิด">×</button></div>
+
+  <!-- ===== Scripts ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/th.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/booking.js"></script>
+</body>
+</html>

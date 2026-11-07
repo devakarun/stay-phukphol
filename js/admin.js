@@ -5,7 +5,15 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const TOTAL = C.houses.length;
   const ST = { pending: "รอยืนยัน", confirmed: "ยืนยันแล้ว", cancelled: "ยกเลิก" };
-  const tag = (s) => `<span class="tag tag--${s}">${ST[s] || s}</span>`;
+  // สถานะที่แสดง: รวมสถานะการจอง + การชำระเงิน
+  function stateOf(b) {
+    if (b.status === "confirmed") return ["confirmed", "ยืนยันแล้ว"];
+    if (b.status === "cancelled") return ["cancelled", "ยกเลิก"];
+    if (b.payment === "slip") return ["slip", "ส่งสลิปแล้ว · รอตรวจ"];
+    if (b.payment === "unpaid") return ["pending", "รอชำระเงิน"];
+    return ["pending", "รอยืนยัน"];
+  }
+  const tag = (b) => { const [c, t] = typeof b === "string" ? [b, ST[b] || b] : stateOf(b); return `<span class="tag tag--${c}">${t}</span>`; };
   const short = (k) => U.thDate(k, { day: "numeric", month: "short" });
 
   let ALL = [], known = null, unsub = null, view = "overview";
@@ -37,25 +45,36 @@
   });
 
   /* ================= รับข้อมูล + แจ้งเตือน ================= */
+  let payState = new Map();
   function onData(list) {
-    ALL = list;
+    ALL = list; DB._last = list;
     if (known) {
-      const fresh = list.filter((b) => !known.has(b.id));
-      fresh.forEach(notifyNew);
+      list.filter((b) => !known.has(b.id)).forEach(notifyNew);
+      list.filter((b) => known.has(b.id) && b.payment === "slip" && payState.get(b.id) !== "slip").forEach(notifySlip);
     }
     known = new Set(list.map((b) => b.id));
+    payState = new Map(list.map((b) => [b.id, b.payment]));
     renderAll();
+    if (modal.classList.contains("is-open") && openId) openBooking(openId, true);
   }
-
-  function notifyNew(b) {
-    const text = `${b.name} · ${short(b.checkIn)}–${short(b.checkOut)} · ${b.rooms.length} หลัง · ${U.money(b.total)}`;
-    toast("🔔 มีการจองใหม่ " + b.code, text, () => openBooking(b.id));
+  function notifySlip(b) {
+    const text = `${b.name} · ${b.rooms.map(U.houseName).join(", ")} · ${U.money(b.total)}`;
+    toast("💳 ลูกค้าส่งสลิปแล้ว " + b.code, text, () => openBooking(b.id));
+    ring(text, "ลูกค้าส่งสลิปแล้ว · Stay @Phukphol");
+  }
+  function ring(text, title) {
     chime();
     $("#bell").classList.remove("ring"); void $("#bell").offsetWidth; $("#bell").classList.add("ring");
     if ("Notification" in window && Notification.permission === "granted") {
-      try { new Notification("มีการจองใหม่ · Stay @Phukphol", { body: text, icon: "images/favicon.png" }); } catch (e) {}
+      try { new Notification(title, { body: text, icon: "images/favicon.png" }); } catch (e) {}
     }
     flashTitle();
+  }
+
+  function notifyNew(b) {
+    const text = `${b.name} · ${short(b.checkIn)}–${short(b.checkOut)} · ${b.rooms.map(U.houseName).join(", ")} · ${U.money(b.total)}`;
+    toast("🔔 มีการจองใหม่ " + b.code + " (รอชำระเงิน)", text, () => openBooking(b.id));
+    ring(text, "มีการจองใหม่ · Stay @Phukphol");
   }
   function chime() {
     try {
@@ -120,11 +139,11 @@
   $("#todayText").textContent = new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   function renderAll() {
-    const pend = ALL.filter((b) => b.status === "pending");
+    const pend = ALL.filter((b) => b.status === "pending").sort((a, z) => (z.payment === "slip") - (a.payment === "slip"));
     $("#pendingPill").hidden = !pend.length; $("#pendingPill").textContent = pend.length;
     $("#bellCount").hidden = !pend.length; $("#bellCount").textContent = pend.length;
     $("#bellPanel").innerHTML = pend.length
-      ? pend.map((b) => `<div class="item" data-id="${b.id}"><b>${U.esc(b.name)} <span class="code">${b.code}</span></b><span class="muted">${short(b.checkIn)}–${short(b.checkOut)} · ${U.money(b.total)}</span></div>`).join("")
+      ? pend.map((b) => `<div class="item" data-id="${b.id}"><b>${U.esc(b.name)} <span class="code">${b.code}</span></b><span class="muted">${short(b.checkIn)}–${short(b.checkOut)} · ${U.money(b.total)}</span>${tag(b)}</div>`).join("")
       : `<p class="empty">ไม่มีการจองที่รอยืนยัน 🎉</p>`;
     if (view === "overview") renderOverview();
     if (view === "calendar") renderCalendar();
@@ -145,7 +164,7 @@
     const free = freeOn(t);
     const monthCount = ALL.filter((b) => b.status !== "cancelled" && (b.createdAt && new Date(b.createdAt).toISOString().slice(0, 7) === ym)).length;
     $("#kpis").innerHTML = `
-      <div class="kpi kpi--hl"><span>รอยืนยัน</span><b>${pend}</b><small>การจองใหม่ที่ต้องตอบกลับ</small></div>
+      <div class="kpi kpi--hl"><span>รอดำเนินการ</span><b>${pend}</b><small>ส่งสลิปแล้ว ${ALL.filter((b) => b.status === "pending" && b.payment === "slip").length} · รอชำระ ${ALL.filter((b) => b.status === "pending" && b.payment !== "slip").length}</small></div>
       <div class="kpi"><span>บ้านว่างคืนนี้</span><b>${free}/${TOTAL}</b><small>เข้าพัก ${TOTAL - free} หลัง</small></div>
       <div class="kpi"><span>เช็กอินวันนี้</span><b>${ci}</b><small>การจอง</small></div>
       <div class="kpi"><span>รายได้เดือนนี้</span><b>${U.money(Math.round(rev))}</b><small>จองใหม่เดือนนี้ ${monthCount} รายการ</small></div>`;
@@ -163,7 +182,7 @@
     $("#upcoming").innerHTML = up.length ? up.map((b) => {
       const d = U.fromKey(b.checkIn);
       return `<li data-id="${b.id}"><div class="d"><b>${d.getDate()}</b><small>${d.toLocaleDateString("th-TH", { month: "short" })}</small></div>
-        <div class="x"><div><b>${U.esc(b.name)}</b> · ${b.nights} คืน</div><div class="muted small">${b.rooms.map(U.houseName).join(", ")} · ${b.adults + b.children} ท่าน${b.rateName === "รวมอาหารเช้า" ? " · 🍳 อาหารเช้า" : ""}${b.requests.length ? " · " + U.esc(b.requests.join(", ")) : ""}</div></div>${tag(b.status)}</li>`;
+        <div class="x"><div><b>${U.esc(b.name)}</b> · ${b.nights} คืน</div><div class="muted small">${b.rooms.map(U.houseName).join(", ")} · ${b.adults + b.children} ท่าน${b.rateName === "รวมอาหารเช้า" ? " · 🍳 อาหารเช้า" : ""}${b.requests.length ? " · " + U.esc(b.requests.join(", ")) : ""}</div></div>${tag(b)}</li>`;
     }).join("") : `<p class="empty">ไม่มีเช็กอินในสัปดาห์นี้</p>`;
 
     $("#strip").innerHTML = Array.from({ length: 14 }, (_, i) => {
@@ -182,7 +201,7 @@
         <td class="code">${b.code}</td><td><b>${U.esc(b.name)}</b><br><span class="muted small">${U.esc(b.phone)}</span></td>
         <td>${short(b.checkIn)} – ${short(b.checkOut)}<br><span class="muted small">${b.nights} คืน${b.rateName ? " · " + U.esc(b.rateName) : ""}</span></td>
         <td>${b.rooms.map(U.houseName).join("<br>")}</td><td>${b.adults} / ${b.children}${b.extraBeds ? " +เตียง" : ""}</td>
-        <td><b>${U.money(b.total)}</b></td><td>${tag(b.status)}</td>
+        <td><b>${U.money(b.total)}</b></td><td>${tag(b)}</td>
         <td class="muted small">${new Date(b.createdAt).toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</td></tr>`).join("") + "</tbody>";
   }
   function filtered() {
@@ -196,9 +215,9 @@
     filter = b.dataset.s; $$("#statusFilter button").forEach((x) => x.classList.toggle("is-active", x === b)); renderTable();
   }));
   $("#btnCsv").onclick = () => {
-    const head = ["รหัส", "ชื่อ", "โทร", "อีเมล", "เช็กอิน", "เช็กเอาต์", "คืน", "ผู้ใหญ่", "เด็ก", "บ้าน", "แพ็กเกจ", "คำขอ", "หมายเหตุ", "ยอด", "สถานะ"];
+    const head = ["รหัส", "ชื่อ", "โทร", "อีเมล", "เช็กอิน", "เช็กเอาต์", "คืน", "ผู้ใหญ่", "เด็ก", "บ้าน", "แพ็กเกจ", "คำขอ", "หมายเหตุ", "ยอด", "สถานะ", "รหัสเปิดห้อง"];
     const rows = filtered().map((b) => [b.code, b.name, b.phone, b.email, b.checkIn, b.checkOut, b.nights, b.adults, b.children,
-      b.rooms.map(U.houseName).join(" / "), b.rateName || "", b.requests.join(" / "), b.note, b.total, ST[b.status]]);
+      b.rooms.map(U.houseName).join(" / "), b.rateName || "", b.requests.join(" / "), b.note, b.total, stateOf(b)[1], b.doorCode || ""]);
     const csv = "﻿" + [head, ...rows].map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "bookings-" + U.today() + ".csv"; a.click();
@@ -290,7 +309,7 @@
   /* ================= Modal ================= */
   const modal = $("#modal");
   function openModal(html) { $("#modalBody").innerHTML = html; modal.classList.add("is-open"); }
-  function closeModal() { modal.classList.remove("is-open"); }
+  function closeModal() { modal.classList.remove("is-open"); openId = null; }
   modal.addEventListener("click", (e) => { if (e.target === modal || e.target.closest("[data-close]")) closeModal(); });
   addEventListener("keydown", (e) => e.key === "Escape" && closeModal());
 
@@ -301,36 +320,82 @@
     const d = e.target.closest("[data-day]"); if (d) openDay(d.dataset.day);
   });
 
-  function openBooking(id) {
+  let openId = null;
+  function openBooking(id, refresh) {
     const b = ALL.find((x) => x.id === id); if (!b) return;
+    if (refresh && document.activeElement && document.activeElement.id === "doorInput") return;
+    openId = id;
     const tel = b.phone.replace(/[^0-9+]/g, "");
+    const pay = { unpaid: "ยังไม่แนบสลิป", slip: "แนบสลิปแล้ว รอตรวจสอบ", paid: "ชำระแล้ว" }[b.payment] || "-";
+    const v = { code: b.code, rooms: b.rooms, checkIn: b.checkIn, checkOut: b.checkOut, doorCode: b.doorCode };
+    const mailBody = b.status === "confirmed" ? U.confirmText(v) : "";
     openModal(`
-      <div class="mh"><h2>${U.esc(b.name)}</h2>${tag(b.status)}</div>
-      <p class="code">${b.code}</p>
-      <dl class="dl">
-        <dt>เช็กอิน</dt><dd>${U.thDate(b.checkIn, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} · มาถึงประมาณ ${U.esc(b.arrivalTime || "-")}</dd>
-        <dt>เช็กเอาต์</dt><dd>${U.thDate(b.checkOut, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} (${b.nights} คืน)</dd>
-        <dt>บ้านพัก</dt><dd>${b.rooms.map(U.houseName).join(", ")}</dd>
-        <dt>แพ็กเกจ</dt><dd><b>${U.esc(b.rateName || "-")}</b></dd>
-        <dt>ผู้เข้าพัก</dt><dd>ผู้ใหญ่ ${b.adults} · เด็ก ${b.children}</dd>
-        <dt>คำขอเพิ่มเติม</dt><dd>${U.esc(b.requests.join(", ") || "-")}</dd>
-        <dt>ข้อความ</dt><dd>${U.esc(b.note || "-")}</dd>
-        <dt>โทร</dt><dd><a href="tel:${tel}">${U.esc(b.phone)}</a></dd>
-        <dt>อีเมล</dt><dd><a href="mailto:${U.esc(b.email)}">${U.esc(b.email)}</a></dd>
-        <dt>ยอดรวม</dt><dd><b style="font-size:1.3rem;color:var(--forest)">${U.money(b.total)}</b></dd>
-        <dt>จองเมื่อ</dt><dd>${new Date(b.createdAt).toLocaleString("th-TH")}</dd>
-      </dl>
+      <div class="mh"><h2>${U.esc(b.name)}</h2>${tag(b)}</div>
+      <p class="code">รหัสการจอง ${U.esc(b.code)}</p>
+      <div class="mgrid">
+        <dl class="dl">
+          <dt>เช็กอิน</dt><dd>${U.thDate(b.checkIn, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} · มาถึงประมาณ ${U.esc(b.arrivalTime || "-")}</dd>
+          <dt>เช็กเอาต์</dt><dd>${U.thDate(b.checkOut, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} (${b.nights} คืน)</dd>
+          <dt>ห้องพัก</dt><dd><b>${b.rooms.map(U.houseName).join(", ")}</b></dd>
+          <dt>แพ็กเกจ</dt><dd><b>${U.esc(b.rateName || "-")}</b></dd>
+          <dt>ผู้เข้าพัก</dt><dd>ผู้ใหญ่ ${b.adults} · เด็ก ${b.children}</dd>
+          <dt>คำขอเพิ่มเติม</dt><dd>${U.esc(b.requests.join(", ") || "-")}</dd>
+          <dt>ข้อความ</dt><dd>${U.esc(b.note || "-")}</dd>
+          <dt>โทร</dt><dd><a href="tel:${tel}">${U.esc(b.phone)}</a></dd>
+          <dt>อีเมล</dt><dd><a href="mailto:${U.esc(b.email)}">${U.esc(b.email)}</a></dd>
+          <dt>ยอดรวม</dt><dd><b style="font-size:1.3rem;color:var(--forest)">${U.money(b.total)}</b></dd>
+          <dt>การชำระเงิน</dt><dd>${pay}</dd>
+          ${b.doorCode ? `<dt>รหัสเปิดห้อง</dt><dd><b class="door">${U.esc(b.doorCode)}</b></dd>` : ""}
+          <dt>จองเมื่อ</dt><dd>${new Date(b.createdAt).toLocaleString("th-TH")}</dd>
+        </dl>
+        <div class="slipbox" id="slipBox">${b.payment === "unpaid" ? `<p class="empty">ลูกค้ายังไม่ได้แนบสลิป</p>` : `<p class="empty">กำลังโหลดสลิป...</p>`}</div>
+      </div>
+      ${b.status === "pending" ? `
+      <div class="confirmbox">
+        <h3>ยืนยันการจอง</h3>
+        <p class="muted small">${b.payment === "slip" ? "ตรวจยอดเงินในสลิปให้ตรงกับยอดรวมก่อนยืนยัน" : "⚠️ ลูกค้ายังไม่ได้แนบสลิป ยืนยันได้ถ้าตรวจการชำระเงินทางอื่นแล้ว"}</p>
+        <label class="doorfield"><span>รหัสเปิดห้อง 6 หลัก (ตั้งรหัสนี้ที่ประตู ${b.rooms.map(U.houseName).join(", ")} ด้วย)</span>
+          <span class="doorrow"><input id="doorInput" inputmode="numeric" maxlength="6" value="${U.doorCode()}" /><button type="button" class="btn btn--ghost btn--sm" id="doorNew">สุ่มใหม่</button></span></label>
+        <button class="btn btn--ok" data-act="confirm">✓ ยืนยันการจอง และส่งรหัสให้ลูกค้า</button>
+      </div>` : ""}
+      ${b.status === "confirmed" ? `
+      <div class="confirmbox confirmbox--done">
+        <h3>ส่งข้อมูลยืนยันให้ลูกค้า</h3>
+        <p class="muted small">ลูกค้าเห็นรหัสการจองและรหัสเปิดห้องบนหน้าเว็บแล้ว ส่งซ้ำทาง LINE หรืออีเมลได้</p>
+        <div class="actions" style="border:0;padding:0;margin:0">
+          <button class="btn btn--sm" data-act="copy">📋 คัดลอกข้อความยืนยัน (วางใน LINE)</button>
+          <a class="btn btn--ghost btn--sm" href="mailto:${U.esc(b.email)}?subject=${encodeURIComponent("ยืนยันการจอง " + b.code + " · สเตย์@บ้านปลูกผล")}&body=${encodeURIComponent(mailBody)}">✉️ ส่งทางอีเมล</a>
+        </div>
+      </div>` : ""}
       <div class="actions">
-        ${b.status !== "confirmed" && b.status !== "cancelled" ? `<button class="btn btn--ok btn--sm" data-act="confirmed">✓ ยืนยันการจอง</button>` : ""}
         ${b.status !== "cancelled" ? `<button class="btn btn--bad btn--sm" data-act="cancelled">ยกเลิก (คืนห้องว่าง)</button>` : ""}
         <a class="btn btn--ghost btn--sm" href="tel:${tel}">📞 โทร</a>
-        <a class="btn btn--ghost btn--sm" href="mailto:${U.esc(b.email)}?subject=${encodeURIComponent("ยืนยันการจอง " + b.code + " · Stay @Phukphol")}">✉️ อีเมล</a>
         <button class="btn btn--ghost btn--sm" data-act="delete" style="margin-left:auto">ลบ</button>
       </div>`);
+    if (b.payment !== "unpaid") DB.getSlip(b.id).then((img) => {
+      if (openId !== b.id || !$("#slipBox")) return;
+      $("#slipBox").innerHTML = img ? `<p class="small muted">สลิปการโอน (แตะเพื่อขยาย)</p><img src="${img}" alt="สลิปการโอนของ ${U.esc(b.name)}" class="slipimg" />` : `<p class="empty">ไม่มีสลิปในระบบ</p>`;
+      const im = $(".slipimg"); if (im) im.onclick = () => im.classList.toggle("zoom");
+    }).catch(() => { if ($("#slipBox")) $("#slipBox").innerHTML = `<p class="empty">โหลดสลิปไม่สำเร็จ</p>`; });
+    const dn = $("#doorNew"); if (dn) dn.onclick = () => ($("#doorInput").value = U.doorCode());
     $$("[data-act]", modal).forEach((btn) => (btn.onclick = async () => {
       const a = btn.dataset.act;
-      if (a === "cancelled" && !confirm("ยืนยันยกเลิกการจองนี้? บ้านจะกลับมาว่างให้จองได้")) return;
-      if (a === "delete" && !confirm("ลบการจองนี้ถาวร?")) return;
+      if (a === "copy") {
+        const t = U.confirmText(v);
+        try { await navigator.clipboard.writeText(t); toast("คัดลอกแล้ว", "นำไปวางในแชท LINE ของลูกค้าได้เลย"); }
+        catch (e) { prompt("คัดลอกข้อความนี้", t); }
+        return;
+      }
+      if (a === "confirm") {
+        const code = $("#doorInput").value.trim();
+        if (!/^\d{6}$/.test(code)) { toast("รหัสเปิดห้องไม่ถูกต้อง", "ต้องเป็นตัวเลข 6 หลัก"); return; }
+        btn.disabled = true;
+        try { await DB.confirm(b, code); toast("ยืนยันการจองแล้ว", b.code + " · ลูกค้าเห็นรหัสเปิดห้องบนหน้าเว็บแล้ว"); openBooking(b.id); }
+        catch (ex) { toast("ทำรายการไม่สำเร็จ", ex.message); btn.disabled = false; }
+        return;
+      }
+      if (a === "cancelled" && !confirm("ยืนยันยกเลิกการจองนี้? ห้องจะกลับมาว่างให้จองได้")) return;
+      if (a === "delete" && !confirm("ลบการจองนี้ถาวร? (สลิปจะถูกลบด้วย)")) return;
       btn.disabled = true;
       try {
         if (a === "delete") { await DB.remove(b.id); closeModal(); }
@@ -347,10 +412,10 @@
       <p class="muted">ว่าง ${TOTAL - Object.keys(rm).length} จาก ${TOTAL} หลัง · เช็กอิน ${arr.length} · เช็กเอาต์ ${dep.length}</p>
       <div class="houses" style="margin:16px 0">${C.houses.map((h) => {
         const b = rm[h.id];
-        return b ? `<div class="house busy ${b.status === "pending" ? "pending" : ""}" data-id="${b.id}"><b>${U.esc(h.name)}</b>${U.esc(b.name)}<br><span class="st">${ST[b.status]}</span></div>`
+        return b ? `<div class="house busy ${b.status === "pending" ? "pending" : ""}" data-id="${b.id}"><b>${U.esc(h.name)}</b>${U.esc(b.name)}<br><span class="st">${stateOf(b)[1]}</span></div>`
           : `<div class="house"><b>${U.esc(h.name)}</b>ว่าง</div>`;
       }).join("")}</div>
-      ${bs.length ? `<ul class="list">${bs.map((b) => `<li data-id="${b.id}"><div class="x"><div><b>${U.esc(b.name)}</b> <span class="code">${b.code}</span></div><div class="muted small">${short(b.checkIn)}–${short(b.checkOut)} · ${b.rooms.map(U.houseName).join(", ")}</div></div>${tag(b.status)}</li>`).join("")}</ul>` : `<p class="empty">ไม่มีผู้เข้าพักคืนนี้</p>`}`);
+      ${bs.length ? `<ul class="list">${bs.map((b) => `<li data-id="${b.id}"><div class="x"><div><b>${U.esc(b.name)}</b> <span class="code">${b.code}</span></div><div class="muted small">${short(b.checkIn)}–${short(b.checkOut)} · ${b.rooms.map(U.houseName).join(", ")}</div></div>${tag(b)}</li>`).join("")}</ul>` : `<p class="empty">ไม่มีผู้เข้าพักคืนนี้</p>`}`);
   }
 
   /* ================= เครื่องมือโหมดทดลอง ================= */

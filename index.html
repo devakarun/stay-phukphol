@@ -91,7 +91,7 @@
           <div class="house-card__dots"></div>
         </div>
         <div class="house-card__body">
-          <h3>Stay01 – Stay05</h3>
+          <h3>Stay@1 – Stay@5</h3>
           <p class="muted">บ้านพักหลังเล็ก เป็นส่วนตัว ในโซนที่พักติดบ้านปลูกผลคาเฟ่ รายล้อมด้วยหุบเขาและสวน</p>
           <ul class="amenities">
             <li><i>🛏️</i>1 ห้องนอน (1 เตียง)</li>
@@ -177,9 +177,10 @@
 
       <div class="book reveal">
         <ol class="steps" id="steps">
-          <li class="is-active"><span>1</span>วันที่ & ผู้เข้าพัก</li>
+          <li class="is-active"><span>1</span>วันที่ & ห้องพัก</li>
           <li><span>2</span>ข้อมูลผู้จอง</li>
-          <li><span>3</span>ยืนยัน</li>
+          <li><span>3</span>ชำระเงิน</li>
+          <li><span>4</span>ยืนยันการจอง</li>
         </ol>
 
         <!-- STEP 1 -->
@@ -200,6 +201,16 @@
             <button class="btn" id="btnSearch">ค้นหาห้องว่าง</button>
           </div>
           <div class="result" id="result"></div>
+          <div class="roommap" id="roomMap">
+            <div class="roommap__head">
+              <div><p class="roommap__title">เลือกห้องพักจากแผนที่</p><p class="muted small" id="mapHint">เลือกวันที่แล้วกด "ค้นหาห้องว่าง" เพื่อดูห้องที่ว่าง</p></div>
+              <div class="legend"><span><i class="lg lg--free"></i>ว่าง</span><span><i class="lg lg--pick"></i>เลือกแล้ว</span><span><i class="lg lg--full"></i>เต็ม</span></div>
+            </div>
+            <div class="roommap__img"><img id="mapImg" alt="แผนที่บ้านพัก Stay@1 ถึง Stay@5" loading="lazy" /><div id="mapPins"></div></div>
+            <div class="roompick" id="roomPick" role="group" aria-label="เลือกห้องพัก"></div>
+          </div>
+          <div class="result" id="plans"></div>
+          <p class="lookup-link"><button type="button" class="linkbtn" id="openLookup">มีรหัสการจองแล้ว? แจ้งชำระเงิน / ดูสถานะการจอง</button></p>
         </div>
 
         <!-- STEP 2 -->
@@ -246,7 +257,29 @@
 
         <!-- STEP 3 -->
         <div class="step" data-step="3">
-          <div class="done" id="done"></div>
+          <div class="pay" id="pay"></div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step" data-step="4">
+          <div class="confirm" id="confirmBox"></div>
+        </div>
+
+        <!-- เช็กสถานะด้วยรหัส -->
+        <div class="step" data-step="lookup">
+          <form class="lookup" id="lookupForm" method="post" action="javascript:void(0)">
+            <h3>ดูสถานะการจอง / แจ้งชำระเงิน</h3>
+            <p class="muted">กรอกรหัสการจอง 4 หลัก และเบอร์โทรศัพท์ 4 ตัวท้ายที่ใช้ตอนจอง</p>
+            <div class="form__row">
+              <label class="field"><span>รหัสการจอง</span><input id="lkCode" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="เช่น K7QX" /></label>
+              <label class="field"><span>เบอร์โทร 4 ตัวท้าย</span><input id="lkPhone" maxlength="4" inputmode="numeric" placeholder="เช่น 6282" /></label>
+            </div>
+            <p class="form__error" id="lkError"></p>
+            <div class="form__actions">
+              <button type="button" class="btn btn--ghost dark" id="lkBack">← กลับไปจองห้อง</button>
+              <button type="submit" class="btn">ดูสถานะ</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -281,7 +314,7 @@
       <details class="reveal"><summary>เวลาเช็กอิน / เช็กเอาต์</summary><p>เช็กอินตั้งแต่ <b data-cfg="checkInTime"></b> และเช็กเอาต์ก่อน <b data-cfg="checkOutTime"></b></p></details>
       <details class="reveal"><summary>บ้านพักมีอะไรบ้าง?</summary><p>บ้านแต่ละหลังมี 1 ห้องนอน (1 เตียง), 1 ห้องน้ำ และอ่างอาบน้ำ อยู่ในโซนที่พักติดกับบ้านปลูกผลคาเฟ่</p></details>
       <details class="reveal"><summary>บ้านหนึ่งหลังพักได้กี่คน?</summary><p>พักได้ 2 ท่านตามราคาห้อง และเพิ่มเตียงเสริมได้อีก 1 ท่าน (สูงสุด 3 ท่าน/หลัง) หากมาหลายคน ระบบจะจัดบ้านให้หลายหลังโดยอัตโนมัติ</p></details>
-      <details class="reveal"><summary>ชำระเงินอย่างไร?</summary><p>หลังส่งคำขอจอง ทีมงานจะติดต่อกลับเพื่อยืนยันห้องและแจ้งช่องทางชำระเงินภายใน 24 ชั่วโมง</p></details>
+      <details class="reveal"><summary>ชำระเงินอย่างไร?</summary><p>หลังกรอกข้อมูลจอง ระบบจะแสดงเลขบัญชีธนาคารกสิกรไทยให้โอนชำระ แล้วแนบสลิปในหน้าเดียวกันได้เลย เมื่อเจ้าหน้าที่ตรวจสอบแล้ว หน้าเว็บจะแสดงรหัสการจองและรหัสเปิดห้องให้ทันที</p></details>
       <details class="reveal"><summary>นำสัตว์เลี้ยงมาได้ไหม?</summary><p>กรุณาแจ้งในช่อง "ข้อความถึงเรา" ขณะจอง เพื่อให้ทีมงานตรวจสอบและยืนยันอีกครั้ง</p></details>
     </div>
   </section>

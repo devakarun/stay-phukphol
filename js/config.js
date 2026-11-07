@@ -55,6 +55,6 @@ window.SP_CONFIG = {
     address: "ตำบล..., อำเภอ..., จังหวัดพังงา 82xxx"
   },
   // Google Maps > แชร์ > ฝังแผนที่ > คัดลอกเฉพาะลิงก์ใน src="..."
-  mapEmbedUrl: "https://www.google.com/maps?q=Phang+Nga&output=embed",
-  mapLink: "https://maps.google.com/?q=Phang+Nga"
+     mapEmbedUrl: "https://www.google.com/maps?q=บ้านปลูกผลคาเฟ่+พังงา&output=embed",
+     mapLink: "https://bit.ly/3weKoNL"
 };

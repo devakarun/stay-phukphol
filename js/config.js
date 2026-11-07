@@ -33,11 +33,11 @@ window.SP_CONFIG = {
   /* ---------- 4) ห้องพักและราคา ---------- */
   houses: [
     // x, y = ตำแหน่งป้ายสถานะบนภาพแผนที่ (เปอร์เซ็นต์จากซ้าย / จากบน)
-    { id: 1, name: "Stay@1", x: 88.5, y: 43.6 },
-    { id: 2, name: "Stay@2", x: 74.3, y: 45.6 },
-    { id: 3, name: "Stay@3", x: 58.9, y: 47.4 },
-    { id: 4, name: "Stay@4", x: 40.5, y: 48.2 },
-    { id: 5, name: "Stay@5", x: 20.6, y: 50.0 }
+    { id: 1, name: "Stay@1", x: 87.0, y: 39.0 },
+    { id: 2, name: "Stay@2", x: 73.3, y: 41.5 },
+    { id: 3, name: "Stay@3", x: 59.5, y: 44.2 },
+    { id: 4, name: "Stay@4", x: 43.4, y: 47.0 },
+    { id: 5, name: "Stay@5", x: 26.0, y: 50.5 }
   ],
   roomMapImage: "images/room-map.jpg",
 

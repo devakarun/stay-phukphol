@@ -366,7 +366,7 @@ details p { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
 .lg--pick { background: var(--forest); }
 .lg--full { background: #c2462f; }
 .roommap__img { position: relative; border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); }
-.roommap__img img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.roommap__img img { width: 100%; height: auto; display: block; }
 .pin { position: absolute; transform: translate(-50%, 0); padding: .3rem .75rem; border-radius: 999px; font-size: .8rem; font-weight: 500; white-space: nowrap;
        box-shadow: 0 6px 16px -6px rgba(0,0,0,.45); transition: transform .2s, background .2s; border: 2px solid #fff; }
 .pin:hover { transform: translate(-50%, -2px) scale(1.06); }
@@ -466,3 +466,17 @@ details p { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
 .book { scroll-margin-top: 84px; }
 @media (max-width: 560px) { .pin__long { display: none; } .pin--pick { padding-inline: .5rem; } }
 @media (prefers-reduced-motion: reduce) { .done__icon svg { stroke-dashoffset: 0; } }
+
+/* แผนที่ห้องแบบกะทัดรัด: ภาพซ้าย ปุ่มเลือกห้องขวา */
+.roommap__body { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+.roommap__img { border-radius: 16px; box-shadow: none; border: 1px solid var(--line); align-self: start; }
+.roommap .pin { font-size: .72rem; padding: .18rem .6rem; border-width: 1.5px; }
+.roommap__body .roompick { grid-template-columns: 1fr; align-content: start; gap: 6px; }
+.roommap__body .rp { display: flex; justify-content: space-between; align-items: center; padding: .55rem .9rem; text-align: left; }
+.roommap__title { font-size: 1.1rem; }
+@media (max-width: 760px) {
+  .roommap__body { grid-template-columns: 1fr; }
+  .roommap__body .roompick { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+  .roommap__body .rp { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: .45rem .1rem; }
+  .roommap .pin { font-size: .6rem; padding: .1rem .4rem; }
+}

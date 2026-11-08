@@ -106,6 +106,17 @@ window.SP_CONFIG = {
       url: "https://www.tiktok.com/search?q=" + encodeURIComponent("บ้านปลูกผลคาเฟ่") }
   ],
 
+  /* ---------- 7) TikTok ----------
+     user   = ชื่อช่อง (ไม่ต้องใส่ @) → หน้าเว็บจะแสดงคลิปล่าสุดของช่องให้อัตโนมัติ
+     videos = (ไม่บังคับ) ลิงก์คลิปที่อยากโชว์เป็นแถบ "สตอรี่" ด้านบน
+              วิธีเอาลิงก์: เปิดคลิปใน TikTok > แชร์ > คัดลอกลิงก์ แล้ววางในเครื่องหมาย " " คั่นด้วย , */
+  tiktok: {
+    user: "baanphukpholcafe",
+    videos: [
+      // "https://www.tiktok.com/@baanphukpholcafe/video/1234567890123456789",
+    ]
+  },
+
   // Google Maps > แชร์ > ฝังแผนที่ > คัดลอกเฉพาะลิงก์ใน src="..."
   mapEmbedUrl: "https://www.google.com/maps?q=%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%9B%E0%B8%A5%E0%B8%B9%E0%B8%81%E0%B8%9C%E0%B8%A5%E0%B8%84%E0%B8%B2%E0%B9%80%E0%B8%9F%E0%B9%88+%E0%B8%9E%E0%B8%B1%E0%B8%87%E0%B8%87%E0%B8%B2&output=embed",
   mapLink: "https://bit.ly/3weKoNL"

@@ -24,6 +24,44 @@
   $("#mapFrame").src = C.mapEmbedUrl;
   $("#year").textContent = new Date().getFullYear();
 
+  /* ---------- TikTok: สตอรี่ + คลิปล่าสุดของช่อง ---------- */
+  (function tiktok() {
+    const T = C.tiktok || {}, user = String(T.user || "").replace(/^@/, "");
+    const sec = $("#tiktok");
+    if (!user) { sec.hidden = true; return; }
+    const prof = "https://www.tiktok.com/@" + encodeURIComponent(user);
+    $("#ttFollow").href = prof;
+    const vids = (T.videos || []).filter((u) => /^https:\/\/(www\.|vm\.|vt\.)?tiktok\.com\//.test(u));
+    if (vids.length) {
+      $("#ttStories").hidden = false;
+      const track = $("#ttTrack");
+      track.innerHTML = vids.map((u, i) => `
+        <a class="story" href="${U.esc(u)}" target="_blank" rel="noopener" data-i="${i}">
+          <span class="story__img"></span>
+          <span class="story__ring"><img src="images/favicon.png" alt="" /></span>
+          <span class="story__play">▶</span>
+          <span class="story__cap">@${U.esc(user)}</span>
+        </a>`).join("");
+      vids.forEach((u, i) => {
+        fetch("https://www.tiktok.com/oembed?url=" + encodeURIComponent(u))
+          .then((r) => r.json()).then((d) => {
+            const a = $(`.story[data-i="${i}"]`, track);
+            if (d.thumbnail_url) $(".story__img", a).style.backgroundImage = `url("${d.thumbnail_url.replace(/"/g, "")}")`;
+            if (d.title) $(".story__cap", a).textContent = d.title;
+          }).catch(() => {});
+      });
+      $("#ttMore").onclick = () => track.scrollBy({ left: track.clientWidth * 0.8, behavior: "smooth" });
+    }
+    /* คลิปล่าสุดของช่อง (ตัวฝังทางการของ TikTok อัปเดตอัตโนมัติ) โหลดเมื่อเลื่อนมาถึง */
+    const load = () => {
+      $("#ttFeed").innerHTML = `<blockquote class="tiktok-embed" cite="${prof}" data-unique-id="${U.esc(user)}" data-embed-type="creator" style="max-width:780px;min-width:288px;margin:0 auto"><section><a target="_blank" rel="noopener" href="${prof}?refer=creator_embed">@${U.esc(user)}</a></section></blockquote>`;
+      const sc = document.createElement("script"); sc.async = true; sc.src = "https://www.tiktok.com/embed.js";
+      document.body.appendChild(sc);
+    };
+    const tio = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { tio.disconnect(); load(); } }, { rootMargin: "400px" });
+    tio.observe(sec);
+  })();
+
   /* แถบจองติดล่างจอบนมือถือ: ซ่อนเมื่ออยู่หน้าแรกหรือส่วนจองอยู่บนจอ */
   $("#mbarPrice").textContent = U.money(Math.min(...C.rates.map((r) => r.price)));
   const mbar = $("#mbar"), vis = new Map();

@@ -576,3 +576,36 @@ body, .houses, .faq { background-image: url("../images/bg-leaves.png"), url("../
   .price-row .rates__price s { font-size: .9rem; }
   .price-row .btn { width: 100%; text-align: center; justify-content: center; }
 }
+
+/* ---------- Popup เช็กข้อมูลการจอง ---------- */
+body.no-scroll { overflow: hidden; }
+.bk-modal { position: fixed; inset: 0; z-index: 120; background: rgba(24, 30, 20, .55); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 16px; }
+.bk-modal[hidden] { display: none; }
+.bk-modal__card { position: relative; width: min(460px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; background: var(--cream); border-radius: 20px; padding: 28px 24px 24px; box-shadow: 0 24px 60px rgba(0,0,0,.25); animation: bkm-in .25s ease; }
+@keyframes bkm-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+.bk-modal__card h3 { margin: 0 0 .3rem; color: var(--forest); }
+.bk-modal__card .field { display: block; margin-top: .9rem; }
+.bk-modal__card .field input { width: 100%; }
+#bkmCode { text-transform: uppercase; letter-spacing: .2em; font-family: var(--num); font-size: 1.2rem; }
+.bk-modal__go { width: 100%; justify-content: center; margin-top: .6rem; }
+.bk-modal__x { position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border-radius: 50%; font-size: 24px; line-height: 1; color: var(--muted); }
+.bk-modal__x:hover { background: rgba(0,0,0,.06); }
+.bks__code { font-size: 1.05rem; margin: 0 0 .8rem; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.bks__code b { font-family: var(--num); letter-spacing: .08em; }
+.bks__st { font-size: .78rem; padding: .15rem .7rem; border-radius: 999px; }
+.bks__st--wait { background: #fbefd2; color: #8a5a12; } .bks__st--ok { background: #dcefd9; color: #2c6a35; } .bks__st--no { background: #f6dcd8; color: #9a3326; }
+.bks__door { background: var(--forest); color: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 1rem; display: grid; gap: 2px; }
+.bks__door b { font-family: var(--num); font-size: 2rem; letter-spacing: .25em; color: var(--sun, #f2c94c); line-height: 1.2; }
+.bks__door small { opacity: .85; font-size: .78rem; }
+.bks__list { list-style: none; margin: 0; padding: 0; display: grid; }
+.bks__list li { display: grid; grid-template-columns: 26px 96px 1fr; gap: .4rem; padding: .5rem 0; border-bottom: 1px dashed var(--line); font-size: .92rem; align-items: baseline; }
+.bks__list i { font-style: normal; } .bks__list span { color: var(--muted); } .bks__list b { font-weight: 500; }
+.bks .bf-note { margin-top: .9rem; }
+.bks__pay { width: 100%; justify-content: center; margin-top: 1rem; }
+.bks .center { text-align: center; margin-top: .9rem; }
+.bks .contact-btns { margin-top: .7rem; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.bks .contact-btns .btn { justify-content: center; text-align: center; padding-left: .5rem; padding-right: .5rem; font-size: .9rem; }
+@media (max-width: 480px) {
+  .bk-modal__card { padding: 24px 16px 18px; }
+  .bks__list li { grid-template-columns: 22px 78px 1fr; font-size: .86rem; padding: .42rem 0; }
+}

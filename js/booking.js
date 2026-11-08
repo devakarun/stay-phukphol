@@ -461,5 +461,66 @@
     } catch (e) {}
   })();
 
+  /* ================= Popup เช็กข้อมูลการจอง (ปุ่มหน้าแรก) ================= */
+  const M = $("#bkModal");
+  const openM = () => {
+    $("#bkmForm").hidden = false; $("#bkmResult").hidden = true; $("#bkmError").textContent = "";
+    M.hidden = false; document.body.classList.add("no-scroll"); setTimeout(() => $("#bkmCode").focus(), 50);
+  };
+  const closeM = () => { M.hidden = true; document.body.classList.remove("no-scroll"); };
+  $("#heroLookup").onclick = openM;
+  $("#bkmClose").onclick = closeM;
+  M.addEventListener("click", (e) => { if (e.target === M) closeM(); });
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && !M.hidden) closeM(); });
+  $("#bkmCode").addEventListener("input", (e) => (e.target.value = e.target.value.toUpperCase()));
+  $("#bkmForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const code = $("#bkmCode").value.trim().toUpperCase(), ph = $("#bkmPhone").value.trim();
+    const err = $("#bkmError"), btn = $(".bk-modal__go"); err.textContent = "";
+    if (!/^[A-Z0-9]{4}$/.test(code)) return (err.textContent = "รหัสการจองมี 4 หลัก (ตัวอักษรภาษาอังกฤษและตัวเลข)");
+    if (!/^\d{4}$/.test(ph)) return (err.textContent = "กรุณากรอกเบอร์โทร 4 ตัวท้าย");
+    const key = code + "-" + ph;
+    btn.disabled = true; btn.textContent = "กำลังค้นหา...";
+    try {
+      const v = await DB.getGuestView(key);
+      if (!v) { err.textContent = "ไม่พบการจองนี้ กรุณาตรวจสอบรหัสและเบอร์โทรอีกครั้ง"; return; }
+      store.set(LAST, key); showSummary(key, v);
+    } catch (ex) { console.error(ex); err.textContent = "เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่"; }
+    finally { btn.disabled = false; btn.textContent = "ยืนยัน"; }
+  };
+  function showSummary(key, v) {
+    const ST = { awaiting_payment: ["รอชำระเงิน", "wait"], slip: ["รอตรวจสอบสลิป", "wait"], confirmed: ["ยืนยันแล้ว", "ok"], cancelled: ["ยกเลิกแล้ว", "no"] };
+    const st = ST[v.state] || [v.state, "wait"];
+    const d = (k) => U.thDate(k, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+    const guests = v.adults != null && (v.adults || v.children) ? "ผู้ใหญ่ " + v.adults + (v.children ? " · เด็ก " + v.children : "") : "";
+    const bf = /อาหารเช้า/.test(v.rateName || "") && !/ไม่รวม/.test(v.rateName || "");
+    const row = (ic, label, val) => val ? `<li><i>${ic}</i><span>${label}</span><b>${val}</b></li>` : "";
+    const door = v.state === "confirmed" && v.doorCode;
+    $("#bkmResult").innerHTML = `
+      <div class="bks">
+        <p class="bks__code">การจอง <b>#${U.esc(v.code)}</b> <span class="bks__st bks__st--${st[1]}">${st[0]}</span></p>
+        ${door ? `<div class="bks__door"><span>🔑 รหัสเปิดห้อง</span><b>${U.esc(v.doorCode)}</b><small>${U.esc(C.stayGuide.doorNote)}</small></div>` : ""}
+        <ul class="bks__list">
+          ${row("👤", "ชื่อผู้จอง", U.esc(v.guestName || ""))}
+          ${row("🏡", "ห้องพัก", (v.rooms || []).map((r) => U.esc(U.houseName(r))).join(", "))}
+          ${row("📅", "เช็กอิน", d(v.checkIn) + " · " + C.checkInTime + " น.")}
+          ${row("📅", "เช็กเอาต์", d(v.checkOut) + " · " + C.checkOutTime + " น.")}
+          ${row("🌙", "จำนวนคืน", v.nights + " คืน")}
+          ${row("👥", "ผู้เข้าพัก", guests)}
+          ${row("🍽", "แพ็กเกจ", U.esc(v.rateName || ""))}
+          ${row("⏰", "เวลามาถึง", v.earlyCheckIn ? "ขอเช็กอินก่อนเวลา " + U.esc(v.earlyCheckIn) + " น." : U.esc(v.arrivalTime || ""))}
+          ${row("📝", "คำขอเพิ่มเติม", (v.requests || []).filter((x) => !/^เช็กอินก่อนเวลา/.test(x)).map(U.esc).join(", "))}
+          ${row("💰", "ยอดรวม", U.money(v.total))}
+        </ul>
+        ${bf ? `<p class="bf-note">🍳 *อาหารเช้าสามารถเสิร์ฟได้ตั้งแต่ 08.30น. ค่ะ</p>` : ""}
+        ${v.state === "awaiting_payment" ? `<button type="button" class="btn bks__pay" id="bkmPay">ไปชำระเงิน / แนบสลิป →</button>` : ""}
+        ${v.state === "slip" ? `<p class="muted small center">ได้รับสลิปแล้ว เจ้าหน้าที่จะตรวจสอบและยืนยันการจองโดยเร็วที่สุดค่ะ</p>` : ""}
+        ${contactBtns}
+      </div>`;
+    $("#bkmForm").hidden = true; $("#bkmResult").hidden = false;
+    const pay = $("#bkmPay");
+    if (pay) pay.onclick = () => { closeM(); openGuest(key); };
+  }
+
   renderMap();
 })();

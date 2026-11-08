@@ -50,7 +50,10 @@ service cloud.firestore {
       allow get: if true;
       allow list: if isAdmin();
       allow create: if request.resource.data.state == 'awaiting_payment'
-        && request.resource.data.keys().hasOnly(['bookingId', 'code', 'state', 'total', 'checkIn', 'checkOut', 'nights', 'rooms', 'rateName', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['bookingId', 'code', 'state', 'total', 'checkIn', 'checkOut', 'nights', 'rooms', 'rateName', 'createdAt',
+                                                'guestName', 'adults', 'children', 'requests', 'arrivalTime', 'earlyCheckIn'])
+        && (!('guestName' in request.resource.data) || request.resource.data.guestName.size() <= 80)
+        && (!('requests' in request.resource.data) || request.resource.data.requests.size() <= 10)
         && request.resource.data.code is string
         && exists(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId));
       allow update: if isAdmin()

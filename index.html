@@ -47,7 +47,7 @@
       <p class="hero__lead reveal">บ้านพัก 5 หลัง ติดบ้านปลูกผลคาเฟ่ ท่ามกลางหุบเขาพังงา<br />เดินชมสวน เล่นกับน้อง ๆ สัตว์ และพักผ่อนแบบไม่ต้องรีบ</p>
       <div class="hero__cta reveal">
         <a href="#booking" class="btn">เช็กห้องว่าง</a>
-        <a href="#houses" class="btn btn--ghost">ดูบ้านพัก</a>
+        <button type="button" class="btn btn--ghost" id="heroLookup">เช็กข้อมูลที่จองไว้</button>
       </div>
     </div>
     <a href="#about" class="hero__scroll" aria-label="เลื่อนลง"><span></span></a>
@@ -358,6 +358,23 @@
 
   <!-- Lightbox -->
   <div class="lightbox" id="lightbox"><img alt="" /><button aria-label="ปิด">×</button></div>
+
+
+  <!-- ===== Popup เช็กข้อมูลการจอง ===== -->
+  <div class="bk-modal" id="bkModal" hidden>
+    <div class="bk-modal__card" role="dialog" aria-modal="true" aria-labelledby="bkmTitle">
+      <button type="button" class="bk-modal__x" id="bkmClose" aria-label="ปิด">×</button>
+      <form id="bkmForm" method="post" action="javascript:void(0)">
+        <h3 id="bkmTitle">เช็กข้อมูลที่จองไว้</h3>
+        <p class="muted small">กรอกรหัสการจอง 4 หลัก และเบอร์โทร 4 ตัวท้ายที่ใช้ตอนจอง</p>
+        <label class="field"><span>รหัสการจอง</span><input id="bkmCode" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="เช่น K7QX" /></label>
+        <label class="field"><span>เบอร์โทร 4 ตัวท้าย</span><input id="bkmPhone" maxlength="4" inputmode="numeric" placeholder="เช่น 6282" /></label>
+        <p class="form__error" id="bkmError"></p>
+        <button type="submit" class="btn bk-modal__go">ยืนยัน</button>
+      </form>
+      <div id="bkmResult" hidden></div>
+    </div>
+  </div>
 
   <!-- ===== Scripts ===== -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>

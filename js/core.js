@@ -92,7 +92,10 @@
   // ข้อมูลที่ลูกค้าเห็นได้ (ไม่มีข้อมูลส่วนตัว)
   const viewOf = (b, id, key) => ({
     bookingId: id, code: b.code, state: "awaiting_payment", total: b.total,
-    checkIn: b.checkIn, checkOut: b.checkOut, nights: b.nights, rooms: b.rooms, rateName: b.rateName || ""
+    checkIn: b.checkIn, checkOut: b.checkOut, nights: b.nights, rooms: b.rooms, rateName: b.rateName || "",
+    guestName: String(b.name || "").slice(0, 80), adults: +b.adults || 0, children: +b.children || 0,
+    requests: (b.requests || []).map((x) => String(x).slice(0, 80)).slice(0, 10),
+    arrivalTime: String(b.arrivalTime || "").slice(0, 20), earlyCheckIn: String(b.earlyCheckIn || "").slice(0, 20)
   });
 
   let DB;

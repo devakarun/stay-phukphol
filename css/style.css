@@ -108,12 +108,18 @@ h3 { font-size: 1.6rem; }
 /* Houses */
 .houses { background: var(--sand); }
 .house-card { display: grid; grid-template-columns: 1.2fr 1fr; background: var(--cream); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-.house-card__slides { position: relative; min-height: 420px; }
+.house-card__slides { position: relative; min-height: 420px; aspect-ratio: 4 / 5; max-height: 720px; touch-action: pan-y; }
 .house-card__slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.05); transition: opacity 1s, transform 6s; }
 .house-card__slides img.is-active { opacity: 1; transform: scale(1); }
 .house-card__dots { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
 .house-card__dots button { width: 9px; height: 9px; border-radius: 9px; background: rgba(255, 255, 255, .55); transition: width .3s; }
 .house-card__dots button.is-active { width: 26px; background: #fff; }
+.house-card__dots { z-index: 2; flex-wrap: wrap; justify-content: center; max-width: 90%; }
+.house-card__dots button { width: 7px; height: 7px; }
+.house-card__dots button.is-active { width: 20px; }
+.house-card__nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,.75); color: #3a2e22; font-size: 26px; line-height: 1; display: grid; place-items: center; box-shadow: 0 4px 14px rgba(0,0,0,.15); transition: background .2s; }
+.house-card__nav:hover { background: #fff; }
+.house-card__nav--prev { left: 14px; } .house-card__nav--next { right: 14px; }
 .house-card__body { padding: clamp(24px, 4vw, 48px); display: flex; flex-direction: column; }
 .amenities { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .7rem 1rem; margin: 1.6rem 0; font-size: .93rem; }
 .amenities li { display: flex; align-items: center; gap: .55rem; }
@@ -259,7 +265,8 @@ details p { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
   .nav.is-open { color: var(--forest); }
   .about__grid, .house-card, .location__grid, .step2 { grid-template-columns: 1fr; }
   .about__badge { left: 12px; }
-  .house-card__slides { min-height: 300px; }
+  .house-card__slides { min-height: 0; max-height: none; }
+  .house-card__nav { width: 34px; height: 34px; font-size: 22px; }
   .search { grid-template-columns: 1fr 1fr; }
   .search .field--dates, .search .btn { grid-column: 1/-1; }
   .gallery__grid { grid-template-columns: 1fr 1fr; grid-auto-rows: 160px; }

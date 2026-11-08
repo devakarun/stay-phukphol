@@ -72,7 +72,14 @@
     slides.forEach((s, j) => s.classList.toggle("is-active", j === cur));
     $$("button", dots).forEach((d, j) => d.classList.toggle("is-active", j === cur));
   }
-  go(0); setInterval(() => go(cur + 1), 4500);
+  go(0);
+  let timer = setInterval(() => go(cur + 1), 4500);
+  const step = (d) => { go(cur + d); clearInterval(timer); timer = setInterval(() => go(cur + 1), 6000); };
+  $(".house-card__nav--prev").onclick = () => step(-1);
+  $(".house-card__nav--next").onclick = () => step(1);
+  const box = $("#houseSlides"); let sx = null;
+  box.addEventListener("touchstart", (e) => (sx = e.touches[0].clientX), { passive: true });
+  box.addEventListener("touchend", (e) => { if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); sx = null; });
 
   /* Lightbox แกลเลอรี */
   const lb = $("#lightbox");

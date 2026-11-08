@@ -91,12 +91,13 @@ function msgNew(b) {
     "⏰ " + (b.earlyCheckIn ? "ขอเช็กอินก่อนเวลา " + b.earlyCheckIn + " น." : "มาถึงประมาณ " + (b.arrivalTime || CFG.checkIn)),
     b.requests ? "📝 คำขอ: " + b.requests : null,
     b.note ? "💬 " + b.note : null,
-    "💰 ยอดรวม " + money(b.total), "", "Dashboard: " + CFG.dashboard]);
+    "💰 ยอดรวม " + money(b.total), "",
+    "👉 ขั้นตอนถัดไป : รอลูกค้าโอน และแนบสลิปเข้าระบบ", "", "Dashboard: " + CFG.dashboard]);
 }
 function msgSlip(b) {
   return lines(["💳 ลูกค้าส่งสลิปแล้ว #" + b.code, "👤 " + (b.name || "-"),
     "🏡 " + roomsTxt(b.rooms) + " · " + thDate(b.checkIn) + " → " + thDate(b.checkOut),
-    "💰 ยอดที่ต้องตรวจ " + money(b.total), "", "ตรวจสลิปและยืนยัน: " + CFG.dashboard]);
+    "💰 ยอดที่ต้องตรวจ " + money(b.total), "", "👉 ลูกค้าแนบสลิปมาแล้ว ไปยืนยันการจองที่ระบบหลังบ้าน", CFG.dashboard]);
 }
 function msgConfirmed(b, v) {
   const door = v && /^\d{6}$/.test(String(v.doorCode || "")) ? String(v.doorCode) : "";

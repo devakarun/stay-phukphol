@@ -467,7 +467,7 @@
     $("#bkmForm").hidden = false; $("#bkmResult").hidden = true; $("#bkmError").textContent = "";
     M.hidden = false; document.body.classList.add("no-scroll"); setTimeout(() => $("#bkmCode").focus(), 50);
   };
-  const closeM = () => { M.hidden = true; document.body.classList.remove("no-scroll"); };
+  const closeM = () => { M.hidden = true; document.body.classList.remove("no-scroll"); if (M._watch) { M._watch(); M._watch = null; } };
   $("#heroLookup").onclick = openM;
   $("#bkmClose").onclick = closeM;
   M.addEventListener("click", (e) => { if (e.target === M) closeM(); });
@@ -499,7 +499,12 @@
     $("#bkmResult").innerHTML = `
       <div class="bks">
         <p class="bks__code">การจอง <b>#${U.esc(v.code)}</b> <span class="bks__st bks__st--${st[1]}">${st[0]}</span></p>
-        ${door ? `<div class="bks__door"><span>🔑 รหัสเปิดห้อง</span><b>${U.esc(v.doorCode)}</b><small>${U.esc(C.stayGuide.doorNote)}</small></div>` : ""}
+        ${door
+          ? `<div class="bks__door"><span>🔑 รหัสเปิดห้อง</span><b>${U.esc(v.doorCode)}</b><small>${U.esc(C.stayGuide.doorNote)}</small></div>`
+          : v.state === "cancelled" ? ""
+          : `<div class="bks__door bks__door--wait"><span>🔑 รหัสเปิดห้อง</span><b>– – – – – –</b><small>${v.state === "slip"
+              ? "รหัสจะแสดงที่นี่ทันทีเมื่อเจ้าหน้าที่ตรวจสลิปและยืนยันการจองแล้วค่ะ"
+              : "รหัสจะแสดงที่นี่หลังชำระเงิน แนบสลิป และเจ้าหน้าที่ยืนยันการจองแล้วค่ะ"}</small></div>`}
         <ul class="bks__list">
           ${row("👤", "ชื่อผู้จอง", U.esc(v.guestName || ""))}
           ${row("🏡", "ห้องพัก", (v.rooms || []).map((r) => U.esc(U.houseName(r))).join(", "))}
@@ -518,6 +523,13 @@
         ${contactBtns}
       </div>`;
     $("#bkmForm").hidden = true; $("#bkmResult").hidden = false;
+    if (!M._watch && v.state !== "confirmed" && v.state !== "cancelled") {
+      let first = true;
+      M._watch = DB.watchGuestView(key, (nv) => {
+        if (first) { first = false; return; }
+        if (nv && !M.hidden && nv.state !== v.state) { M._watch(); M._watch = null; showSummary(key, nv); }
+      });
+    }
     const pay = $("#bkmPay");
     if (pay) pay.onclick = () => { closeM(); openGuest(key); };
   }

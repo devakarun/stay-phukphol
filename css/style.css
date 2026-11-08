@@ -609,3 +609,6 @@ body.no-scroll { overflow: hidden; }
   .bk-modal__card { padding: 24px 16px 18px; }
   .bks__list li { grid-template-columns: 22px 78px 1fr; font-size: .86rem; padding: .42rem 0; }
 }
+.bks__door--wait { background: #eef2e6; color: var(--forest); border: 1px dashed #b9c7a8; }
+.bks__door--wait b { color: #9aab88; letter-spacing: .15em; font-size: 1.6rem; }
+.bks__door--wait small { opacity: 1; color: var(--muted); }

@@ -17,7 +17,6 @@
     `<a class="social" href="${U.esc(x.url)}" target="_blank" rel="noopener"><b>${U.esc(x.type)}</b>${U.esc(x.name)}</a>`).join("");
   $("#footSocial").innerHTML = soc.map((x) =>
     `<a href="${U.esc(x.url)}" target="_blank" rel="noopener">${U.esc(x.type)} · ${U.esc(x.name)}</a>`).join("");
-  $("#houseNames").innerHTML = C.houses.map((h) => `<span>${U.esc(h.name)}</span>`).join("");
   $("#cPhone").href = "tel:" + C.contact.phone.replace(/[^0-9+]/g, "");
   $("#cLine").href = "https://line.me/R/ti/p/" + encodeURIComponent(C.contact.line);
   $("#cMap").href = C.mapLink;

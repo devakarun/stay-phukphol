@@ -558,3 +558,21 @@ body, .houses, .faq { background-image: url("../images/bg-leaves.png"), url("../
   body, .houses, .faq { background-size: 440px auto, 260px auto; }
   .booking { background-size: 440px auto, 260px auto, auto; }
 }
+
+/* ระยะห่างกระชับระหว่าง แกลเลอรีวิดีโอ → TikTok → กิจกรรม */
+.gallery { padding-bottom: clamp(28px, 4vw, 48px); }
+.tiktok { padding-top: clamp(28px, 4vw, 48px); padding-bottom: clamp(40px, 5vw, 64px); }
+.tiktok + .activities { padding-top: clamp(40px, 5vw, 64px); }
+
+.bf-note { grid-column: 1 / -1; margin: .2rem 0 0; padding: .7rem 1rem; border-radius: 12px; background: #f3f6ea; color: var(--forest); font-size: .92rem; }
+
+/* ราคาบนมือถือ: ชื่อแพ็กเกจอยู่บน ราคาอยู่ล่าง ปุ่มจองเต็มความกว้าง */
+@media (max-width: 640px) {
+  .price-row { flex-direction: column; align-items: stretch; }
+  .price-row .rates { min-width: 0; }
+  .price-row .rates li { grid-template-columns: 1fr; gap: .25rem; }
+  .price-row .rates__name { font-size: .95rem; white-space: nowrap; }
+  .price-row .rates__price b { font-size: 1.5rem; margin: 0; }
+  .price-row .rates__price s { font-size: .9rem; }
+  .price-row .btn { width: 100%; text-align: center; justify-content: center; }
+}

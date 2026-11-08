@@ -217,7 +217,6 @@
 
   /* ---------- เวลาเช็กอินก่อนเวลา / เวลารับอาหารเช้า ---------- */
   $("#earlyTime").innerHTML = C.earlyCheckInTimes.map((t) => `<option>${t}</option>`).join("");
-  $("#bfTime").innerHTML = C.breakfastTimes.map((t) => `<option>${t}</option>`).join("");
   const syncTimes = () => {
     $("#earlyField").hidden = !$("#earlyChk").checked;
     $("#bfField").hidden = !U.rate(S.rate).breakfast;
@@ -256,7 +255,7 @@
 
     const requests = $$('input[name="req"]:checked', f).map((c) => c.value);
     const earlyTime = $("#earlyChk").checked ? f.earlyTime.value : "";
-    const breakfastTime = $("#bfField").hidden ? "" : f.breakfastTime.value;
+    const breakfastTime = "";
     if (earlyTime) requests[requests.indexOf("เช็กอินก่อนเวลา")] = "เช็กอินก่อนเวลา " + earlyTime + " น.";
     if (S.extraBeds) requests.unshift("เตียงเสริม ×" + S.extraBeds);
     const booking = {

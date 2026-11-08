@@ -81,7 +81,6 @@ window.SP_CONFIG = {
     { id: "breakfast", name: "รวมอาหารเช้า",    price: 1850, regular: 2500, weekendPrice: 0, breakfast: true }
   ],
   defaultRate: "breakfast",  // แพ็กเกจที่เลือกไว้ให้ก่อน
-  breakfastTimes: ["07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00"],  // เวลารับอาหารเช้าที่ให้เลือก
   earlyCheckInTimes: ["09:00", "10:00", "11:00", "12:00", "13:00"],               // เวลาเช็กอินก่อนเวลาที่ให้เลือก
   extraBedPrice: 300,        // บาท/คืน/เตียง
   maxNights: 14,

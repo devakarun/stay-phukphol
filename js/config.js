@@ -102,16 +102,19 @@ window.SP_CONFIG = {
       url: "https://www.facebook.com/search/top?q=" + encodeURIComponent("บ้านปลูกผลคาเฟ่") },
     { type: "Facebook", name: "คลินิกกายภาพบำบัดบ้านปลูกผล",
       url: "https://www.facebook.com/search/top?q=" + encodeURIComponent("คลินิกกายภาพบำบัดบ้านปลูกผล") },
-    { type: "TikTok", name: "บ้านปลูกผลคาเฟ่",
-      url: "https://www.tiktok.com/search?q=" + encodeURIComponent("บ้านปลูกผลคาเฟ่") }
+    { type: "TikTok", name: "บ้านปลูกผลคาเฟ่", url: "https://www.tiktok.com/@baanphukpholcafe" },
+    { type: "TikTok", name: "คลินิกกายภาพบำบัดบ้านปลูกผล", url: "https://www.tiktok.com/@baanphukphol" }
   ],
 
   /* ---------- 7) TikTok ----------
-     user   = ชื่อช่อง (ไม่ต้องใส่ @) → หน้าเว็บจะแสดงคลิปล่าสุดของช่องให้อัตโนมัติ
+     accounts = ช่อง TikTok (ไม่ต้องใส่ @) → หน้าเว็บจะแสดงคลิปล่าสุดของแต่ละช่องให้อัตโนมัติ
      videos = (ไม่บังคับ) ลิงก์คลิปที่อยากโชว์เป็นแถบ "สตอรี่" ด้านบน
               วิธีเอาลิงก์: เปิดคลิปใน TikTok > แชร์ > คัดลอกลิงก์ แล้ววางในเครื่องหมาย " " คั่นด้วย , */
   tiktok: {
-    user: "baanphukpholcafe",
+    accounts: [
+      { user: "baanphukpholcafe", label: "บ้านปลูกผลคาเฟ่" },
+      { user: "baanphukphol",     label: "คลินิกกายภาพบำบัดบ้านปลูกผล" }
+    ],
     videos: [
       // "https://www.tiktok.com/@baanphukpholcafe/video/1234567890123456789",
     ]

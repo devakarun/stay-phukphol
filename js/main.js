@@ -26,11 +26,12 @@
 
   /* ---------- TikTok: สตอรี่ + คลิปล่าสุดของช่อง ---------- */
   (function tiktok() {
-    const T = C.tiktok || {}, user = String(T.user || "").replace(/^@/, "");
+    const T = C.tiktok || {};
+    const accs = (T.accounts || (T.user ? [{ user: T.user, label: "" }] : []))
+      .map((x) => ({ user: String(x.user || "").replace(/^@/, "").replace(/[^\w.]/g, ""), label: x.label || "" })).filter((x) => x.user);
     const sec = $("#tiktok");
-    if (!user) { sec.hidden = true; return; }
-    const prof = "https://www.tiktok.com/@" + encodeURIComponent(user);
-    $("#ttFollow").href = prof;
+    if (!accs.length) { sec.hidden = true; return; }
+    const user = accs[0].user, link = (u) => "https://www.tiktok.com/@" + u;
     const vids = (T.videos || []).filter((u) => /^https:\/\/(www\.|vm\.|vt\.)?tiktok\.com\//.test(u));
     if (vids.length) {
       $("#ttStories").hidden = false;
@@ -40,7 +41,7 @@
           <span class="story__img"></span>
           <span class="story__ring"><img src="images/favicon.png" alt="" /></span>
           <span class="story__play">▶</span>
-          <span class="story__cap">@${U.esc(user)}</span>
+          <span class="story__cap">@${U.esc((u.match(/@([\w.]+)/) || [, user])[1])}</span>
         </a>`).join("");
       vids.forEach((u, i) => {
         fetch("https://www.tiktok.com/oembed?url=" + encodeURIComponent(u))
@@ -54,7 +55,12 @@
     }
     /* คลิปล่าสุดของช่อง (ตัวฝังทางการของ TikTok อัปเดตอัตโนมัติ) โหลดเมื่อเลื่อนมาถึง */
     const load = () => {
-      $("#ttFeed").innerHTML = `<blockquote class="tiktok-embed" cite="${prof}" data-unique-id="${U.esc(user)}" data-embed-type="creator" style="max-width:780px;min-width:288px;margin:0 auto"><section><a target="_blank" rel="noopener" href="${prof}?refer=creator_embed">@${U.esc(user)}</a></section></blockquote>`;
+      $("#ttFeed").innerHTML = accs.map((x) => `
+        <div class="ttacc">
+          <a class="ttacc__head" href="${link(x.user)}" target="_blank" rel="noopener">
+            <span class="ttacc__name">${U.esc(x.label || "@" + x.user)}</span><span class="ttacc__at">@${x.user} · ดูทั้งหมด →</span></a>
+          <blockquote class="tiktok-embed" cite="${link(x.user)}" data-unique-id="${x.user}" data-embed-type="creator" style="max-width:780px;min-width:288px;margin:0"><section><a target="_blank" rel="noopener" href="${link(x.user)}?refer=creator_embed">@${x.user}</a></section></blockquote>
+        </div>`).join("");
       const sc = document.createElement("script"); sc.async = true; sc.src = "https://www.tiktok.com/embed.js";
       document.body.appendChild(sc);
     };

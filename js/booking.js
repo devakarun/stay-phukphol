@@ -1,7 +1,7 @@
 /* Stay @Phukphol — ระบบจองห้องพัก (ฝั่งลูกค้า)
    ขั้นตอน: 1 เลือกวันและห้อง → 2 ข้อมูลผู้จอง → 3 ชำระเงิน/แนบสลิป → 4 ยืนยันการจอง */
 (function () {
-  const { C, U, DB, sendEmails } = window.SP;
+  const { C, U, DB, sendEmails, notifyBot } = window.SP;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const TOTAL = C.houses.length;
@@ -275,6 +275,7 @@
       const res = await DB.createBooking(booking);
       store.set(LAST, res.key);
       sendEmails(res.booking);
+      notifyBot("new", res.key, booking);
       f.reset();
       openGuest(res.key);
     } catch (ex) {
@@ -356,7 +357,7 @@
     $("#slipForm").onsubmit = async (e) => {
       e.preventDefault(); if (!data) return;
       const b = $("#slipBtn"); b.disabled = true; b.textContent = "กำลังส่งสลิป...";
-      try { await DB.uploadSlip(key, v, data); }
+      try { await DB.uploadSlip(key, v, data); notifyBot("slip", key); }
       catch (ex) { console.error(ex); $("#slipErr").textContent = "ส่งสลิปไม่สำเร็จ กรุณาลองใหม่ หรือส่งสลิปทาง LINE"; b.disabled = false; b.textContent = "ส่งสลิปยืนยันการชำระเงิน"; }
     };
   }

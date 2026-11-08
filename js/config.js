@@ -25,6 +25,10 @@ window.SP_CONFIG = {
      อีเมลที่อนุญาตให้เข้า Dashboard (ต้องตรงกับใน firestore.rules ด้วย) */
   adminEmails: ["staybaanphukphol@gmail.com", "dc99degrees@gmail.com"],
 
+  /* ---------- แจ้งเตือนเข้ากลุ่ม Telegram ----------
+     วางลิงก์ Web app ของ Google Apps Script (ลงท้ายด้วย /exec) ถ้าเว้นว่าง จะไม่ส่งแจ้งเตือน */
+  botUrl: "https://script.google.com/macros/s/AKfycbzvB_yTZ2FWwam4wgc0meVGycV2ANAQezKyfJLtBiS-3jwcSU3w5VNBVQOabPI-xxxC7Q/exec",
+
   /* ---------- 3) EmailJS (ส่งอีเมลแจ้งเตือน) ----------
      สมัครฟรีที่ emailjs.com แล้วนำค่ามาใส่ ถ้าเว้นว่างไว้ ระบบจะไม่ส่งอีเมล */
   emailjs: {

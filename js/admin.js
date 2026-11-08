@@ -1,6 +1,6 @@
 /* Stay @Phukphol — Dashboard หลังบ้าน */
 (function () {
-  const { C, U, DB } = window.SP;
+  const { C, U, DB, notifyBot } = window.SP;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const TOTAL = C.houses.length;
@@ -633,7 +633,7 @@
         const code = $("#doorInput").value.trim();
         if (!/^\d{6}$/.test(code)) { toast("รหัสเปิดห้องไม่ถูกต้อง", "ต้องเป็นตัวเลข 6 หลัก"); return; }
         btn.disabled = true;
-        try { await DB.confirm(b, code); toast("ยืนยันการจองแล้ว", b.code + " · ลูกค้าเห็นรหัสเปิดห้องบนหน้าเว็บแล้ว"); openBooking(b.id); }
+        try { await DB.confirm(b, code); notifyBot("confirmed", b.guestKey, { name: b.name, adults: b.adults, children: b.children }); toast("ยืนยันการจองแล้ว", b.code + " · ลูกค้าเห็นรหัสเปิดห้องบนหน้าเว็บแล้ว"); openBooking(b.id); }
         catch (ex) { toast("ทำรายการไม่สำเร็จ", ex.message); btn.disabled = false; }
         return;
       }
@@ -642,7 +642,7 @@
       btn.disabled = true;
       try {
         if (a === "delete") { await DB.remove(b.id); closeModal(); }
-        else { await DB.setStatus(b.id, a); openBooking(b.id); }
+        else { await DB.setStatus(b.id, a); if (a === "cancelled") notifyBot("cancelled", b.guestKey); openBooking(b.id); }
         toast("บันทึกแล้ว", b.code);
       } catch (ex) { toast("ทำรายการไม่สำเร็จ", ex.message); btn.disabled = false; }
     }));

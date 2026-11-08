@@ -315,5 +315,14 @@
     try { await Promise.all(jobs); return true; } catch (e) { console.warn("EmailJS error", e); return false; }
   }
 
-  window.SP = { C, U, DB, sendEmails };
+  /* ---------- แจ้งเตือนเข้ากลุ่ม Telegram (ผ่าน Google Apps Script) ---------- */
+  function notifyBot(type, key, extra) {
+    if (!C.botUrl || !key) return;
+    try {
+      fetch(C.botUrl, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ type, key, extra: extra || {} }) }).catch(() => {});
+    } catch (e) {}
+  }
+
+  window.SP = { C, U, DB, sendEmails, notifyBot };
 })();

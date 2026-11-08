@@ -550,3 +550,11 @@ details p { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
   .vgallery::-webkit-scrollbar { display: none; }
   .vcard { flex: 0 0 72%; scroll-snap-align: center; }
 }
+
+/* ---------- ลายพื้นหลังบาง ๆ (ใบไม้ + ลินิน) ---------- */
+body, .houses, .faq { background-image: url("../images/bg-leaves.png"), url("../images/bg-linen.png"); background-size: 600px auto, 300px auto; background-repeat: repeat; }
+.booking { background-image: url("../images/bg-leaves.png"), url("../images/bg-linen.png"), linear-gradient(180deg, var(--cream), #f1eadb); background-size: 600px auto, 300px auto, auto; }
+@media (max-width: 640px) {
+  body, .houses, .faq { background-size: 440px auto, 260px auto; }
+  .booking { background-size: 440px auto, 260px auto, auto; }
+}

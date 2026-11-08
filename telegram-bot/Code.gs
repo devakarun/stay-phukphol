@@ -10,6 +10,7 @@ const CFG = {
   dashboard: "https://devakarun.github.io/stay-phukphol/admin.html",
   rooms: { 1: "Stay@1", 2: "Stay@2", 3: "Stay@3", 4: "Stay@4", 5: "Stay@5" },
   checkIn: "14:00",
+  checkOut: "12:00",
   dailyHour: 7            // ส่งสรุปอัตโนมัติทุกเช้ากี่โมง (0–23)
 };
 const P = PropertiesService.getScriptProperties();
@@ -60,7 +61,7 @@ function handleSite(b) {
   const book = Object.assign(loadBook(key) || {}, clean(b.extra || {}), { key, code: v.code, rooms: v.rooms,
     checkIn: v.checkIn, checkOut: v.checkOut, nights: v.nights, total: v.total, rateName: v.rateName, state: v.state });
   saveBook(key, book);
-  const msg = { new: msgNew, slip: msgSlip, confirmed: msgConfirmed, cancelled: msgCancelled }[type](book);
+  const msg = { new: msgNew, slip: msgSlip, confirmed: msgConfirmed, cancelled: msgCancelled }[type](book, v);
   if (send(msg)) P.setProperty(dedupe, "1");
 }
 function clean(x) {
@@ -97,9 +98,24 @@ function msgSlip(b) {
     "🏡 " + roomsTxt(b.rooms) + " · " + thDate(b.checkIn) + " → " + thDate(b.checkOut),
     "💰 ยอดที่ต้องตรวจ " + money(b.total), "", "ตรวจสลิปและยืนยัน: " + CFG.dashboard]);
 }
-function msgConfirmed(b) {
-  return lines(["✅ ยืนยันการจองแล้ว #" + b.code, "👤 " + (b.name || "-"), "🏡 " + roomsTxt(b.rooms),
-    "📅 " + thDate(b.checkIn, 1) + " → " + thDate(b.checkOut, 1) + " (" + b.nights + " คืน)", "💰 " + money(b.total)]);
+function msgConfirmed(b, v) {
+  const door = v && /^\d{6}$/.test(String(v.doorCode || "")) ? String(v.doorCode) : "";
+  return lines([
+    "✅ ยืนยันการจองแล้ว #" + b.code,
+    "━━━━━━━━━━━━━━",
+    "🔑 รหัสเปิดห้อง: " + (door || "(ยังไม่มี)"),
+    "━━━━━━━━━━━━━━",
+    "👤 " + (b.name || "-") + (b.phone ? " · " + b.phone : ""),
+    "🏡 " + roomsTxt(b.rooms),
+    "📅 เช็กอิน " + thDate(b.checkIn, 1) + " · " + CFG.checkIn + " น.",
+    "📅 เช็กเอาต์ " + thDate(b.checkOut, 1) + " · " + CFG.checkOut + " น. (" + b.nights + " คืน)",
+    "👥 ผู้ใหญ่ " + (b.adults || 0) + (b.children ? " · เด็ก " + b.children : ""),
+    "🍽 " + (b.rateName || "-") + (b.breakfastTime ? " · รับอาหารเช้า " + b.breakfastTime + " น." : ""),
+    "⏰ " + (b.earlyCheckIn ? "ขอเช็กอินก่อนเวลา " + b.earlyCheckIn + " น." : "มาถึงประมาณ " + (b.arrivalTime || CFG.checkIn)),
+    b.requests ? "📝 คำขอ: " + b.requests : null,
+    b.note ? "💬 " + b.note : null,
+    "💰 ยอดรวม " + money(b.total) + " (ชำระแล้ว)",
+    "", "⚠️ อย่าลืมตั้งรหัสนี้ที่ประตูห้องด้วย"]);
 }
 function msgCancelled(b) { return lines(["❌ ยกเลิกการจอง #" + b.code, "🏡 " + roomsTxt(b.rooms) + " · " + thDate(b.checkIn) + " → " + thDate(b.checkOut), "ห้องกลับมาว่างแล้ว"]); }
 

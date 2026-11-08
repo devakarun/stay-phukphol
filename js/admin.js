@@ -633,7 +633,7 @@
         const code = $("#doorInput").value.trim();
         if (!/^\d{6}$/.test(code)) { toast("รหัสเปิดห้องไม่ถูกต้อง", "ต้องเป็นตัวเลข 6 หลัก"); return; }
         btn.disabled = true;
-        try { await DB.confirm(b, code); notifyBot("confirmed", b.guestKey, { name: b.name, adults: b.adults, children: b.children }); toast("ยืนยันการจองแล้ว", b.code + " · ลูกค้าเห็นรหัสเปิดห้องบนหน้าเว็บแล้ว"); openBooking(b.id); }
+        try { await DB.confirm(b, code); notifyBot("confirmed", b.guestKey, { name: b.name, phone: b.phone, adults: b.adults, children: b.children, arrivalTime: b.arrivalTime, earlyCheckIn: b.earlyCheckIn, breakfastTime: b.breakfastTime, requests: b.requests, note: b.note }); toast("ยืนยันการจองแล้ว", b.code + " · ลูกค้าเห็นรหัสเปิดห้องบนหน้าเว็บแล้ว"); openBooking(b.id); }
         catch (ex) { toast("ทำรายการไม่สำเร็จ", ex.message); btn.disabled = false; }
         return;
       }

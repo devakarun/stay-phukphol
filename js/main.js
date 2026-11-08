@@ -24,6 +24,28 @@
   $("#mapFrame").src = C.mapEmbedUrl;
   $("#year").textContent = new Date().getFullYear();
 
+  /* ---------- แกลเลอรีวิดีโอ (เครื่องเล่น TikTok โหลดเมื่อเลื่อนมาใกล้) ---------- */
+  (function videoGallery() {
+    const box = $("#vGallery");
+    const list = (C.galleryVideos || []).map((u) => {
+      const m = String(u).match(/tiktok\.com\/@([\w.]+)\/video\/(\d{10,25})/);
+      return m && { url: u, user: m[1], id: m[2] };
+    }).filter(Boolean);
+    if (!list.length) { $("#gallery").hidden = true; return; }
+    box.innerHTML = list.map((v) => `
+      <div class="vcard">
+        <div class="vcard__frame" data-id="${v.id}"><span class="vcard__ph">▶</span></div>
+        <a class="vcard__link" href="${U.esc(v.url)}" target="_blank" rel="noopener">@${U.esc(v.user)} · เปิดใน TikTok ↗</a>
+      </div>`).join("");
+    const vio = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const f = e.target; vio.unobserve(f);
+      f.innerHTML = `<iframe src="https://www.tiktok.com/player/v1/${f.dataset.id}?music_info=1&description=0&rel=0&controls=1&progress_bar=1&play_button=1&volume_control=1&fullscreen_button=1&timestamp=0&loop=1"
+        title="คลิปบรรยากาศ" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+    }), { rootMargin: "300px" });
+    $$(".vcard__frame", box).forEach((f) => vio.observe(f));
+  })();
+
   /* ---------- TikTok: สตอรี่ + คลิปล่าสุดของช่อง ---------- */
   (function tiktok() {
     const T = C.tiktok || {};

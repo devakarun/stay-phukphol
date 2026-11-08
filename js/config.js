@@ -106,6 +106,16 @@ window.SP_CONFIG = {
     { type: "TikTok", name: "คลินิกกายภาพบำบัดบ้านปลูกผล", url: "https://www.tiktok.com/@baanphukphol" }
   ],
 
+  /* ---------- แกลเลอรีวิดีโอ "บรรยากาศรอบบ้าน" (ลิงก์คลิป TikTok) ---------- */
+  galleryVideos: [
+    "https://www.tiktok.com/@baanphukpholcafe/video/7704992215788981505",
+    "https://www.tiktok.com/@baanphukpholcafe/video/7704938113474317588",
+    "https://www.tiktok.com/@baanphukpholcafe/video/7704468112229305621",
+    "https://www.tiktok.com/@baanphukpholcafe/video/7704657235745590549",
+    "https://www.tiktok.com/@baanphukpholcafe/video/7703910981390437684",
+    "https://www.tiktok.com/@baanphukpholcafe/video/7702311068529462549"
+  ],
+
   /* ---------- 7) TikTok ----------
      accounts = ช่อง TikTok (ไม่ต้องใส่ @) → หน้าเว็บจะแสดงคลิปล่าสุดของแต่ละช่องให้อัตโนมัติ
      videos = (ไม่บังคับ) ลิงก์คลิปที่อยากโชว์เป็นแถบ "สตอรี่" ด้านบน

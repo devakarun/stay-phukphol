@@ -27,7 +27,8 @@ service cloud.firestore {
     match /bookings/{id} {
       allow create: if request.resource.data.status == 'pending'
         && request.resource.data.payment == 'unpaid'
-        && !request.resource.data.keys().hasAny(['doorCode'])
+        && !request.resource.data.keys().hasAny(['doorCode', 'doorCodes'])
+        && (!('items' in request.resource.data) || (request.resource.data.items is list && request.resource.data.items.size() <= 6))
         && request.resource.data.code is string && request.resource.data.code.size() == 4
         && request.resource.data.guestKey is string
         && request.resource.data.name is string && request.resource.data.name.size() < 120
@@ -51,7 +52,8 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if request.resource.data.state == 'awaiting_payment'
         && request.resource.data.keys().hasOnly(['bookingId', 'code', 'state', 'total', 'checkIn', 'checkOut', 'nights', 'rooms', 'rateName', 'createdAt',
-                                                'guestName', 'adults', 'children', 'requests', 'arrivalTime', 'earlyCheckIn'])
+                                                'guestName', 'adults', 'children', 'requests', 'arrivalTime', 'earlyCheckIn', 'items'])
+        && (!('items' in request.resource.data) || request.resource.data.items.size() <= 6)
         && (!('guestName' in request.resource.data) || request.resource.data.guestName.size() <= 80)
         && (!('requests' in request.resource.data) || request.resource.data.requests.size() <= 10)
         && request.resource.data.code is string

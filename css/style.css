@@ -612,3 +612,44 @@ body.no-scroll { overflow: hidden; }
 .bks__door--wait { background: #eef2e6; color: var(--forest); border: 1px dashed #b9c7a8; }
 .bks__door--wait b { color: #9aab88; letter-spacing: .15em; font-size: 1.6rem; }
 .bks__door--wait small { opacity: 1; color: var(--muted); }
+
+/* ---------- จองห้องพักเพิ่ม ---------- */
+.sumitem + .sumitem { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,.25); }
+.sumitem__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
+.sumitem__head b { color: var(--wheat); font-weight: 500; letter-spacing: .02em; }
+.sumitem__x { color: var(--cream); opacity: .75; font-size: .8rem; padding: .2rem .6rem; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; }
+.sumitem__x:hover { opacity: 1; background: rgba(255,255,255,.1); }
+.sum-warn { margin: .8rem 0 0; padding: .6rem .8rem; border-radius: 10px; background: #f6dcd8; color: #9a3326; font-size: .85rem; }
+.addmore { width: 100%; margin-top: 1.1rem; padding: .8rem 1rem; border-radius: 14px; border: 1.5px dashed rgba(255,255,255,.55); color: var(--wheat); font-size: .98rem; transition: background .2s; }
+.addmore:hover { background: rgba(255,255,255,.08); }
+.add-card { width: min(560px, 100%); }
+.add-card .field { display: block; margin-top: .9rem; }
+.add-card .field input { width: 100%; }
+.add-card .flatpickr-wrapper { display: block; }
+.add-guests { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: .8rem; }
+.add-guests .extra { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .55rem .8rem; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.add-search { width: 100%; justify-content: center; margin-top: .9rem; }
+.add-ok { margin: .8rem 0 .4rem; color: var(--forest); font-size: .9rem; }
+.add-rooms { display: grid; gap: 10px; margin-top: .4rem; }
+.add-rooms .roompick { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.add-rooms .rp { padding: .45rem .2rem; }
+.add-rooms .rp b { font-size: .85rem; }
+.add-plans { display: grid; gap: 8px; }
+.add-go { width: 100%; justify-content: center; margin-top: .8rem; }
+.add-go:disabled { opacity: .45; cursor: not-allowed; }
+.doors { list-style: none; margin: .3rem 0; padding: 0; display: grid; gap: 6px; }
+.doors li { display: flex; justify-content: space-between; align-items: baseline; gap: .8rem; }
+.doors b { font-family: var(--num); letter-spacing: .2em; font-size: 1.45rem; }
+.doors small { opacity: .75; font-size: .75rem; }
+.doors--bks b { color: var(--sun, #f2c94c); }
+.doors--cf li { padding: .35rem 0; border-bottom: 1px dashed var(--line); }
+.doors--cf b { color: var(--forest); }
+.cf__hr { border: 0; border-top: 1px dashed var(--line); margin: .5rem 0; width: 100%; }
+.bks__sub { display: block; font-weight: 400; color: var(--muted); font-size: .84rem; line-height: 1.55; margin-top: 2px; }
+@media (max-width: 480px) {
+  .add-rooms .pin { font-size: .7rem; padding: .2rem .5rem; }
+  .add-rooms .rp b { font-size: .75rem; }
+}
+@media (max-width: 480px) {
+  .add-guests { grid-template-columns: 1fr; }
+}

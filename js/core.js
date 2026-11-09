@@ -49,6 +49,21 @@
     doorCode() { return String(Math.floor(Math.random() * 1e6)).padStart(6, "0"); },
     last4(phone) { return String(phone || "").replace(/\D/g, "").slice(-4); },
     guestKey(code, phone) { return String(code).toUpperCase().trim() + "-" + U.last4(phone); },
+    /* การจองหลายรายการ (ต่างวัน/ต่างห้อง) ใช้รหัสการจองเดียวกัน */
+    items(b) {
+      if (b && b.items && b.items.length) return b.items;
+      return [{ checkIn: b.checkIn, checkOut: b.checkOut, nights: b.nights, rooms: b.rooms || [], adults: b.adults || 0, children: b.children || 0,
+                extraBeds: b.extraBeds || 0, rate: b.rate, rateName: b.rateName || "", total: b.total }];
+    },
+    segs(b) { return U.items(b).map((it, i) => Object.assign({}, b, it, { _i: i })); },
+    doorFor(v, i, room) {
+      const d = (v.doorCodes || []).find((x) => x.i === i && Number(x.room) === Number(room));
+      return d ? d.code : (v.doorCode || "");
+    },
+    span(it, opt) {
+      const o = opt || { day: "numeric", month: "short" };
+      return U.thDate(it.checkIn, o) + " – " + U.thDate(it.checkOut, Object.assign({}, o, { year: "numeric" })) + " (" + it.nights + " คืน)";
+    },
     houseName(id) { const h = C.houses.find((x) => x.id === Number(id)); return h ? h.name : "บ้าน " + id; },
     /* ย่อรูปสลิปให้เล็กลงก่อนบันทึก (ด้านยาวไม่เกิน 1100px, JPEG) */
     compressImage(file, max = 1100) {
@@ -75,10 +90,14 @@
       return [
         G.thanks, "",
         "รหัสการจอง: " + v.code, G.codeNote, "",
-        "ห้องพัก: " + v.rooms.map(U.houseName).join(", "),
-        "เช็กอิน: " + U.thDate(v.checkIn, { weekday: "short", day: "numeric", month: "long", year: "numeric" }) + " ตั้งแต่ " + C.checkInTime + " น.",
-        "เช็กเอาต์: " + U.thDate(v.checkOut, { weekday: "short", day: "numeric", month: "long", year: "numeric" }) + " ก่อน " + C.checkOutTime + " น.", "",
-        "รหัสเปิดห้อง: " + v.doorCode, G.doorNote, "",
+        ...U.items(v).flatMap((it, i, all) => [
+          all.length > 1 ? "— การจองที่ " + (i + 1) + " —" : null,
+          "ห้องพัก: " + it.rooms.map(U.houseName).join(", "),
+          "เช็กอิน: " + U.thDate(it.checkIn, { weekday: "short", day: "numeric", month: "long", year: "numeric" }) + " ตั้งแต่ " + C.checkInTime + " น.",
+          "เช็กเอาต์: " + U.thDate(it.checkOut, { weekday: "short", day: "numeric", month: "long", year: "numeric" }) + " ก่อน " + C.checkOutTime + " น.",
+          ...it.rooms.map((r) => "รหัสเปิดห้อง " + U.houseName(r) + ": " + U.doorFor(v, i, r)), ""
+        ].filter((x) => x !== null)),
+        G.doorNote, "",
         G.title, ...G.steps.map((t, i) => (i + 1) + ". " + t), "",
         "โทร: " + C.contact.phone + " | LINE: " + C.contact.line
       ].join("\n");
@@ -95,8 +114,18 @@
     checkIn: b.checkIn, checkOut: b.checkOut, nights: b.nights, rooms: b.rooms, rateName: b.rateName || "",
     guestName: String(b.name || "").slice(0, 80), adults: +b.adults || 0, children: +b.children || 0,
     requests: (b.requests || []).map((x) => String(x).slice(0, 80)).slice(0, 10),
-    arrivalTime: String(b.arrivalTime || "").slice(0, 20), earlyCheckIn: String(b.earlyCheckIn || "").slice(0, 20)
+    arrivalTime: String(b.arrivalTime || "").slice(0, 20), earlyCheckIn: String(b.earlyCheckIn || "").slice(0, 20),
+    items: U.items(b).slice(0, 6).map((it) => ({ checkIn: it.checkIn, checkOut: it.checkOut, nights: it.nights, rooms: it.rooms,
+      adults: +it.adults || 0, children: +it.children || 0, extraBeds: +it.extraBeds || 0, rateName: String(it.rateName || "").slice(0, 60), total: +it.total || 0 }))
   });
+  // คู่ (ห้อง, คืน) ทั้งหมดของการจอง
+  const roomNightsOf = (b) => {
+    const seen = new Set(), out = [];
+    U.items(b).forEach((it) => it.rooms.forEach((room) => U.nightsBetween(it.checkIn, it.checkOut).forEach((date) => {
+      const k = date + "_" + room; if (seen.has(k)) throw new Error("ROOM_TAKEN"); seen.add(k); out.push({ date, room });
+    })));
+    return out;
+  };
 
   let DB;
 
@@ -115,7 +144,7 @@
         return snap.docs.map((d) => d.data());
       },
       async createBooking(data) {
-        const nights = U.nightsBetween(data.checkIn, data.checkOut);
+        const pairs = roomNightsOf(data);
         for (let attempt = 0; attempt < 5; attempt++) {
           const code = U.makeCode(), key = U.guestKey(code, data.phone);
           const ref = fs.collection("bookings").doc(), gref = fs.collection("guestView").doc(key);
@@ -127,9 +156,7 @@
           // ช่วงที่ 1: กันห้อง + บันทึกการจอง (รวดเดียว ป้องกันการจองซ้อน)
           try {
             await fs.runTransaction(async (tx) => {
-              const refs = [];
-              data.rooms.forEach((room) => nights.forEach((date) =>
-                refs.push({ ref: fs.collection("roomNights").doc(date + "_" + room), date, room })));
+              const refs = pairs.map((x) => ({ ref: fs.collection("roomNights").doc(x.date + "_" + x.room), date: x.date, room: x.room }));
               const snaps = await Promise.all(refs.map((r) => tx.get(r.ref)));
               if (snaps.some((s) => s.exists)) throw new Error("ROOM_TAKEN");
               refs.forEach((r) => tx.set(r.ref, { date: r.date, room: r.room, bookingId: ref.id }));
@@ -171,10 +198,11 @@
         const d = await fs.collection("slips").doc(id).get();
         return d.exists ? d.data().image : null;
       },
-      async confirm(b, doorCode) {
+      async confirm(b, codes) {
+        const doorCodes = typeof codes === "string" ? [] : codes, doorCode = typeof codes === "string" ? codes : (codes[0] || {}).code;
         const batch = fs.batch();
-        batch.update(fs.collection("bookings").doc(b.id), { status: "confirmed", doorCode, payment: b.payment === "unpaid" ? "unpaid" : "paid" });
-        if (b.guestKey) batch.set(fs.collection("guestView").doc(b.guestKey), { state: "confirmed", doorCode }, { merge: true });
+        batch.update(fs.collection("bookings").doc(b.id), { status: "confirmed", doorCode, doorCodes, payment: b.payment === "unpaid" ? "unpaid" : "paid" });
+        if (b.guestKey) batch.set(fs.collection("guestView").doc(b.guestKey), { state: "confirmed", doorCode, doorCodes }, { merge: true });
         await batch.commit();
       },
       async setStatus(id, status) {
@@ -221,13 +249,13 @@
       },
       async createBooking(data) {
         await new Promise((r) => setTimeout(r, 500));
-        const nights = load(KN, []), dates = U.nightsBetween(data.checkIn, data.checkOut);
-        if (nights.some((n) => data.rooms.includes(n.room) && dates.includes(n.date))) throw new Error("ROOM_TAKEN");
+        const nights = load(KN, []), pairs = roomNightsOf(data);
+        if (nights.some((n) => pairs.some((x) => x.room === n.room && x.date === n.date))) throw new Error("ROOM_TAKEN");
         const g = load(KG, {});
         let code, key; do { code = U.makeCode(); key = U.guestKey(code, data.phone); } while (g[key]);
         const id = "demo" + Date.now() + Math.floor(Math.random() * 1000);
         const b = Object.assign({ id, createdAt: Date.now() }, data, { code, guestKey: key, payment: data.payment || "unpaid" });
-        data.rooms.forEach((room) => dates.forEach((date) => nights.push({ date, room, bookingId: id })));
+        pairs.forEach((x) => nights.push({ date: x.date, room: x.room, bookingId: id }));
         save(KN, nights);
         const all = load(KB, []); all.push(b); save(KB, all);
         g[key] = Object.assign(viewOf(b, id, key), b.status === "confirmed" ? { state: "confirmed", doorCode: b.doorCode } : {}); save(KG, g);
@@ -249,9 +277,10 @@
       subscribeBookings(cb) { listeners.add(cb); setTimeout(emit, 0); return () => listeners.delete(cb); },
       async getSlip(id) { return load(KS, {})[id] || null; },
       async patch(id, fields) { save(KB, load(KB, []).map((x) => (x.id === id ? Object.assign(x, fields) : x))); emit(); },
-      async confirm(b, doorCode) {
-        save(KB, load(KB, []).map((x) => (x.id === b.id ? Object.assign(x, { status: "confirmed", doorCode, payment: x.payment === "unpaid" ? "unpaid" : "paid" }) : x)));
-        setGV(b.guestKey, { state: "confirmed", doorCode }); emit();
+      async confirm(b, codes) {
+        const doorCodes = typeof codes === "string" ? [] : codes, doorCode = typeof codes === "string" ? codes : (codes[0] || {}).code;
+        save(KB, load(KB, []).map((x) => (x.id === b.id ? Object.assign(x, { status: "confirmed", doorCode, doorCodes, payment: x.payment === "unpaid" ? "unpaid" : "paid" }) : x)));
+        setGV(b.guestKey, { state: "confirmed", doorCode, doorCodes }); emit();
       },
       async setStatus(id, status) {
         const b = load(KB, []).find((x) => x.id === id);
@@ -307,7 +336,7 @@
       booking_code: b.code, guest_name: b.name, guest_email: b.email, guest_phone: b.phone,
       check_in: U.thDate(b.checkIn), check_out: U.thDate(b.checkOut), nights: b.nights,
       guests: b.adults + " ผู้ใหญ่, " + b.children + " เด็ก",
-      houses: b.rooms.map(U.houseName).join(", "),
+      houses: U.items(b).map((it) => it.rooms.map(U.houseName).join(", ") + " (" + U.thDate(it.checkIn) + "–" + U.thDate(it.checkOut) + ")").join(" | "),
       rate: b.rateName || "-",
       requests: (b.requests.join(", ") || "-") + (b.note ? " | " + b.note : ""),
       total: U.money(b.total), owner_email: E.ownerEmail, to_email: b.email

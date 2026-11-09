@@ -59,7 +59,8 @@ function handleSite(b) {
   const ok = { new: ["awaiting_payment", "slip", "confirmed"], slip: ["slip", "confirmed"], confirmed: ["confirmed"], cancelled: ["cancelled"] }[type];
   if (!ok.includes(v.state)) return;
   const book = Object.assign(loadBook(key) || {}, clean(b.extra || {}), { key, code: v.code, rooms: v.rooms,
-    checkIn: v.checkIn, checkOut: v.checkOut, nights: v.nights, total: v.total, rateName: v.rateName, state: v.state });
+    checkIn: v.checkIn, checkOut: v.checkOut, nights: v.nights, total: v.total, rateName: v.rateName, state: v.state,
+    items: Array.isArray(v.items) && v.items.length > 1 ? v.items : null });
   saveBook(key, book);
   const msg = { new: msgNew, slip: msgSlip, confirmed: msgConfirmed, cancelled: msgCancelled }[type](book, v);
   if (send(msg)) P.setProperty(dedupe, "1");
@@ -79,15 +80,32 @@ function clean(x) {
 const roomsTxt = (r) => (r || []).map((n) => CFG.rooms[n] || "ห้อง " + n).join(", ");
 const money = (n) => "฿" + Number(n || 0).toLocaleString("en-US");
 function thDate(k, wd) { const [y, m, d] = k.split("-").map(Number); const dt = new Date(y, m - 1, d); return (wd ? TH_D[dt.getDay()] + " " : "") + d + " " + TH_M[m - 1] + " " + String(y + 543).slice(2); }
+/* การจองหลายรายการ (รหัสเดียวกัน) */
+function itemsOf(b) {
+  return b.items && b.items.length ? b.items : [{ checkIn: b.checkIn, checkOut: b.checkOut, nights: b.nights, rooms: b.rooms || [],
+    adults: b.adults, children: b.children, rateName: b.rateName, total: b.total }];
+}
+function segsOf(b) { return itemsOf(b).map((it) => Object.assign({}, b, it)); }
+function doorFor(v, i, room) {
+  const d = (v.doorCodes || []).filter((x) => x && x.i === i && +x.room === +room)[0];
+  return d ? String(d.code) : String(v.doorCode || "");
+}
+function itemLines(b) {
+  const its = itemsOf(b);
+  if (its.length === 1) return null;
+  return its.map((it, i) => "🏡 การจองที่ " + (i + 1) + ": " + roomsTxt(it.rooms) + "\n      " + thDate(it.checkIn, 1) + " → " + thDate(it.checkOut, 1) +
+    " (" + it.nights + " คืน)\n      ผู้ใหญ่ " + (it.adults || 0) + (it.children ? " · เด็ก " + it.children : "") + " · " + (it.rateName || "-") + " · " + money(it.total)).join("\n");
+}
 const lines = (a) => a.filter((l) => l !== null && l !== undefined && l !== false).join("\n");
 function msgNew(b) {
+  const multi = itemLines(b);
   return lines([
-    "🔔 การจองใหม่ #" + b.code + " (รอชำระเงิน)",
+    "🔔 การจองใหม่ #" + b.code + " (รอชำระเงิน)" + (multi ? " · " + itemsOf(b).length + " รายการ" : ""),
     "👤 " + (b.name || "-") + (b.phone ? " · " + b.phone : ""),
-    "🏡 " + roomsTxt(b.rooms),
-    "📅 " + thDate(b.checkIn, 1) + " → " + thDate(b.checkOut, 1) + " (" + b.nights + " คืน)",
-    "👥 ผู้ใหญ่ " + (b.adults || 0) + (b.children ? " · เด็ก " + b.children : ""),
-    "🍽 " + (b.rateName || "-") + (b.breakfastTime ? " · รับอาหารเช้า " + b.breakfastTime + " น." : ""),
+    multi || "🏡 " + roomsTxt(b.rooms),
+    multi ? null : "📅 " + thDate(b.checkIn, 1) + " → " + thDate(b.checkOut, 1) + " (" + b.nights + " คืน)",
+    multi ? null : "👥 ผู้ใหญ่ " + (b.adults || 0) + (b.children ? " · เด็ก " + b.children : ""),
+    multi ? null : "🍽 " + (b.rateName || "-") + (b.breakfastTime ? " · รับอาหารเช้า " + b.breakfastTime + " น." : ""),
     "⏰ " + (b.earlyCheckIn ? "ขอเช็กอินก่อนเวลา " + b.earlyCheckIn + " น." : "มาถึงประมาณ " + (b.arrivalTime || CFG.checkIn)),
     b.requests ? "📝 คำขอ: " + b.requests : null,
     b.note ? "💬 " + b.note : null,
@@ -96,33 +114,39 @@ function msgNew(b) {
 }
 function msgSlip(b) {
   return lines(["💳 ลูกค้าส่งสลิปแล้ว #" + b.code, "👤 " + (b.name || "-"),
-    "🏡 " + roomsTxt(b.rooms) + " · " + thDate(b.checkIn) + " → " + thDate(b.checkOut),
+    itemsOf(b).map((it) => "🏡 " + roomsTxt(it.rooms) + " · " + thDate(it.checkIn) + " → " + thDate(it.checkOut)).join("\n"),
     "💰 ยอดที่ต้องตรวจ " + money(b.total), "", "👉 ลูกค้าแนบสลิปมาแล้ว ไปยืนยันการจองที่ระบบหลังบ้าน", CFG.dashboard]);
 }
 function msgConfirmed(b, v) {
-  const door = v && /^\d{6}$/.test(String(v.doorCode || "")) ? String(v.doorCode) : "";
+  v = v || {};
+  const its = itemsOf(b), multi = itemLines(b);
+  const doors = [].concat(...its.map((it, i) => (it.rooms || []).map((r) => {
+    const c = doorFor(v, i, r);
+    return { r, c: /^\d{6}$/.test(c) ? c : "", it };
+  })));
+  const doorTxt = doors.length === 1 ? ["🔑 รหัสเปิดห้อง: " + (doors[0].c || "(ยังไม่มี)")]
+    : ["🔑 รหัสเปิดห้อง"].concat(doors.map((d) => "   • " + roomsTxt([d.r]) + (its.length > 1 ? " (" + thDate(d.it.checkIn) + ")" : "") + ": " + (d.c || "(ยังไม่มี)")));
   return lines([
     "✅ ยืนยันการจองแล้ว #" + b.code,
-    "━━━━━━━━━━━━━━",
-    "🔑 รหัสเปิดห้อง: " + (door || "(ยังไม่มี)"),
+    "━━━━━━━━━━━━━━"].concat(doorTxt, [
     "━━━━━━━━━━━━━━",
     "👤 " + (b.name || "-") + (b.phone ? " · " + b.phone : ""),
-    "🏡 " + roomsTxt(b.rooms),
-    "📅 เช็กอิน " + thDate(b.checkIn, 1) + " · " + CFG.checkIn + " น.",
-    "📅 เช็กเอาต์ " + thDate(b.checkOut, 1) + " · " + CFG.checkOut + " น. (" + b.nights + " คืน)",
-    "👥 ผู้ใหญ่ " + (b.adults || 0) + (b.children ? " · เด็ก " + b.children : ""),
-    "🍽 " + (b.rateName || "-") + (b.breakfastTime ? " · รับอาหารเช้า " + b.breakfastTime + " น." : ""),
+    multi || "🏡 " + roomsTxt(b.rooms),
+    multi ? null : "📅 เช็กอิน " + thDate(b.checkIn, 1) + " · " + CFG.checkIn + " น.",
+    multi ? null : "📅 เช็กเอาต์ " + thDate(b.checkOut, 1) + " · " + CFG.checkOut + " น. (" + b.nights + " คืน)",
+    multi ? null : "👥 ผู้ใหญ่ " + (b.adults || 0) + (b.children ? " · เด็ก " + b.children : ""),
+    multi ? null : "🍽 " + (b.rateName || "-") + (b.breakfastTime ? " · รับอาหารเช้า " + b.breakfastTime + " น." : ""),
     "⏰ " + (b.earlyCheckIn ? "ขอเช็กอินก่อนเวลา " + b.earlyCheckIn + " น." : "มาถึงประมาณ " + (b.arrivalTime || CFG.checkIn)),
     b.requests ? "📝 คำขอ: " + b.requests : null,
     b.note ? "💬 " + b.note : null,
     "💰 ยอดรวม " + money(b.total) + " (ชำระแล้ว)",
-    "", "⚠️ อย่าลืมตั้งรหัสนี้ที่ประตูห้องด้วย"]);
+    "", "⚠️ อย่าลืมตั้งรหัสนี้ที่ประตูห้องด้วย"]));
 }
-function msgCancelled(b) { return lines(["❌ ยกเลิกการจอง #" + b.code, "🏡 " + roomsTxt(b.rooms) + " · " + thDate(b.checkIn) + " → " + thDate(b.checkOut), "ห้องกลับมาว่างแล้ว"]); }
+function msgCancelled(b) { return lines(["❌ ยกเลิกการจอง #" + b.code].concat(itemsOf(b).map((it) => "🏡 " + roomsTxt(it.rooms) + " · " + thDate(it.checkIn) + " → " + thDate(it.checkOut)), ["ห้องกลับมาว่างแล้ว"])); }
 
 /* ================= สรุปรายวัน ================= */
 function summary(day) {
-  const all = allBooks().filter((b) => b.state !== "cancelled");
+  const all = [].concat(...allBooks().filter((b) => b.state !== "cancelled").map(segsOf));
   const t = (b) => (b.earlyCheckIn || b.arrivalTime || CFG.checkIn).slice(0, 5);
   const ins = all.filter((b) => b.checkIn === day).sort((a, z) => t(a).localeCompare(t(z)));
   const outs = all.filter((b) => b.checkOut === day);
@@ -180,7 +204,8 @@ function getGuestView(key) {
   if (r.getResponseCode() !== 200) return null;
   const f = JSON.parse(r.getContentText()).fields || {};
   const val = (x) => !x ? null : x.stringValue != null ? x.stringValue : x.integerValue != null ? +x.integerValue
-    : x.doubleValue != null ? +x.doubleValue : x.arrayValue ? (x.arrayValue.values || []).map(val) : null;
+    : x.doubleValue != null ? +x.doubleValue : x.arrayValue ? (x.arrayValue.values || []).map(val)
+    : x.mapValue ? Object.keys(x.mapValue.fields || {}).reduce((o, k) => { o[k] = val(x.mapValue.fields[k]); return o; }, {}) : null;
   const o = {}; Object.keys(f).forEach((k) => (o[k] = val(f[k]))); return o;
 }
 

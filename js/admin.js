@@ -106,7 +106,8 @@
   }
 
   /* ================= คำนวณ ================= */
-  const active = () => ALL.filter((b) => b.status !== "cancelled");
+  // แตกการจองหลายรายการเป็นช่วง ๆ (แต่ละช่วงมีวันเข้า–ออกและห้องของตัวเอง)
+  const active = () => ALL.filter((b) => b.status !== "cancelled").flatMap(U.segs);
   function onNight(k) { return active().filter((b) => b.checkIn <= k && k < b.checkOut); }
   function roomsOn(k) { const m = {}; onNight(k).forEach((b) => b.rooms.forEach((r) => (m[r] = b))); return m; }
   function freeOn(k) { return TOTAL - Object.keys(roomsOn(k)).length; }
@@ -114,7 +115,7 @@
   // รายได้ต่อเดือน (กระจายตามคืน) เฉพาะที่ยืนยันแล้ว
   function revenueByMonth(year) {
     const m = Array(12).fill(0), byHouse = {};
-    ALL.filter((b) => b.status === "confirmed").forEach((b) => {
+    ALL.filter((b) => b.status === "confirmed").flatMap(U.segs).forEach((b) => {
       const per = b.total / b.nights;
       U.nightsBetween(b.checkIn, b.checkOut).forEach((k) => {
         const d = U.fromKey(k); if (d.getFullYear() !== year) return;
@@ -449,7 +450,7 @@
     const room = {}; C.houses.forEach((h) => (room[h.id] = { id: h.id, name: h.name, nights: 0, rev: 0, bookings: new Set() }));
     const daily = {}; days.forEach((k) => (daily[k] = { rev: 0, rooms: {} }));
     const list = []; let pendingRev = 0, pendingNights = 0;
-    ALL.forEach((b) => {
+    ALL.flatMap(U.segs).forEach((b) => {
       if (b.status === "cancelled" || b.checkOut <= s || b.checkIn >= e) return;
       const ks = U.nightsBetween(b.checkIn > s ? b.checkIn : s, b.checkOut < e ? b.checkOut : e);
       const perNight = b.total / b.nights, per = perNight / b.rooms.length;
@@ -565,30 +566,32 @@
   let openId = null;
   function openBooking(id, refresh) {
     const b = ALL.find((x) => x.id === id); if (!b) return;
-    if (refresh && document.activeElement && document.activeElement.id === "doorInput") return;
+    if (refresh && document.activeElement && document.activeElement.classList.contains("doorInput")) return;
     openId = id;
     const tel = b.phone.replace(/[^0-9+]/g, "");
     const pay = { unpaid: "ยังไม่แนบสลิป", slip: "แนบสลิปแล้ว รอตรวจสอบ", paid: "ชำระแล้ว" }[b.payment] || "-";
-    const v = { code: b.code, rooms: b.rooms, checkIn: b.checkIn, checkOut: b.checkOut, doorCode: b.doorCode };
+    const v = b, its = U.items(b), multi = its.length > 1;
+    const doorRows = its.flatMap((it, i) => it.rooms.map((r) => ({ i, r, it })));
     const mailBody = b.status === "confirmed" ? U.confirmText(v) : "";
     openModal(`
       <div class="mh"><h2>${U.esc(b.name)}</h2>${tag(b)}</div>
       <p class="code">รหัสการจอง ${U.esc(b.code)}</p>
       <div class="mgrid">
         <dl class="dl">
+          ${multi ? its.map((it, i) => `<dt>การจองที่ ${i + 1}</dt><dd><b>${it.rooms.map(U.houseName).join(", ")}</b><br>${U.span(it, { weekday: "short", day: "numeric", month: "short" })}<br><span class="muted small">ผู้ใหญ่ ${it.adults} · เด็ก ${it.children}${it.extraBeds ? " · เตียงเสริม " + it.extraBeds : ""} · ${U.esc(it.rateName || "-")} · ${U.money(it.total)}</span></dd>`).join("") + `<dt>มาถึงประมาณ</dt><dd>${U.esc(b.arrivalTime || "-")}</dd>` : `
           <dt>เช็กอิน</dt><dd>${U.thDate(b.checkIn, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} · มาถึงประมาณ ${U.esc(b.arrivalTime || "-")}</dd>
           <dt>เช็กเอาต์</dt><dd>${U.thDate(b.checkOut, { weekday: "short", day: "numeric", month: "long", year: "numeric" })} (${b.nights} คืน)</dd>
           <dt>ห้องพัก</dt><dd><b>${b.rooms.map(U.houseName).join(", ")}</b></dd>
-          <dt>แพ็กเกจ</dt><dd><b>${U.esc(b.rateName || "-")}</b>${b.breakfastTime ? ` · 🍳 รับอาหารเช้า ${U.esc(b.breakfastTime)} น.` : ""}</dd>
+          <dt>แพ็กเกจ</dt><dd><b>${U.esc(b.rateName || "-")}</b>${b.breakfastTime ? ` · 🍳 รับอาหารเช้า ${U.esc(b.breakfastTime)} น.` : ""}</dd>`}
           ${b.earlyCheckIn ? `<dt>เช็กอินก่อนเวลา</dt><dd><b>${U.esc(b.earlyCheckIn)} น.</b></dd>` : ""}
-          <dt>ผู้เข้าพัก</dt><dd>ผู้ใหญ่ ${b.adults} · เด็ก ${b.children}</dd>
+          ${multi ? "" : `<dt>ผู้เข้าพัก</dt><dd>ผู้ใหญ่ ${b.adults} · เด็ก ${b.children}</dd>`}
           <dt>คำขอเพิ่มเติม</dt><dd>${U.esc(b.requests.join(", ") || "-")}</dd>
           <dt>ข้อความ</dt><dd>${U.esc(b.note || "-")}</dd>
           <dt>โทร</dt><dd><a href="tel:${tel}">${U.esc(b.phone)}</a></dd>
           <dt>อีเมล</dt><dd><a href="mailto:${U.esc(b.email)}">${U.esc(b.email)}</a></dd>
           <dt>ยอดรวม</dt><dd><b style="font-size:1.3rem;color:var(--forest)">${U.money(b.total)}</b></dd>
           <dt>การชำระเงิน</dt><dd>${pay}</dd>
-          ${b.doorCode ? `<dt>รหัสเปิดห้อง</dt><dd><b class="door">${U.esc(b.doorCode)}</b></dd>` : ""}
+          ${b.doorCode ? `<dt>รหัสเปิดห้อง</dt><dd>${doorRows.map((x) => `${doorRows.length > 1 ? U.esc(U.houseName(x.r)) + (multi ? ` <span class="muted small">(${U.thDate(x.it.checkIn, { day: "numeric", month: "short" })})</span>` : "") + " " : ""}<b class="door">${U.esc(U.doorFor(b, x.i, x.r))}</b>`).join("<br>")}</dd>` : ""}
           <dt>จองเมื่อ</dt><dd>${new Date(b.createdAt).toLocaleString("th-TH")}</dd>
         </dl>
         <div class="slipbox" id="slipBox">${b.payment === "unpaid" ? `<p class="empty">ลูกค้ายังไม่ได้แนบสลิป</p>` : `<p class="empty">กำลังโหลดสลิป...</p>`}</div>
@@ -597,8 +600,8 @@
       <div class="confirmbox">
         <h3>ยืนยันการจอง</h3>
         <p class="muted small">${b.payment === "slip" ? "ตรวจยอดเงินในสลิปให้ตรงกับยอดรวมก่อนยืนยัน" : "⚠️ ลูกค้ายังไม่ได้แนบสลิป ยืนยันได้ถ้าตรวจการชำระเงินทางอื่นแล้ว"}</p>
-        <label class="doorfield"><span>รหัสเปิดห้อง 6 หลัก (ตั้งรหัสนี้ที่ประตู ${b.rooms.map(U.houseName).join(", ")} ด้วย)</span>
-          <span class="doorrow"><input id="doorInput" inputmode="numeric" maxlength="6" value="${U.doorCode()}" /><button type="button" class="btn btn--ghost btn--sm" id="doorNew">สุ่มใหม่</button></span></label>
+        ${doorRows.map((x, k) => `<label class="doorfield"><span>รหัสเปิดห้อง 6 หลัก · <b>${U.esc(U.houseName(x.r))}</b>${multi ? ` (${U.span(x.it)})` : ""} — ตั้งรหัสนี้ที่ประตูห้องด้วย</span>
+          <span class="doorrow"><input class="doorInput" ${k === 0 ? 'id="doorInput"' : ""} data-i="${x.i}" data-r="${x.r}" inputmode="numeric" maxlength="6" value="${U.doorCode()}" /><button type="button" class="btn btn--ghost btn--sm doorNew">สุ่มใหม่</button></span></label>`).join("")}
         <button class="btn btn--ok" data-act="confirm">✓ ยืนยันการจอง และส่งรหัสให้ลูกค้า</button>
       </div>` : ""}
       ${b.status === "confirmed" ? `
@@ -620,7 +623,7 @@
       $("#slipBox").innerHTML = img ? `<p class="small muted">สลิปการโอน (แตะเพื่อขยาย)</p><img src="${img}" alt="สลิปการโอนของ ${U.esc(b.name)}" class="slipimg" />` : `<p class="empty">ไม่มีสลิปในระบบ</p>`;
       const im = $(".slipimg"); if (im) im.onclick = () => im.classList.toggle("zoom");
     }).catch(() => { if ($("#slipBox")) $("#slipBox").innerHTML = `<p class="empty">โหลดสลิปไม่สำเร็จ</p>`; });
-    const dn = $("#doorNew"); if (dn) dn.onclick = () => ($("#doorInput").value = U.doorCode());
+    $$(".doorNew", modal).forEach((bt) => (bt.onclick = () => (bt.previousElementSibling.value = U.doorCode())));
     $$("[data-act]", modal).forEach((btn) => (btn.onclick = async () => {
       const a = btn.dataset.act;
       if (a === "copy") {
@@ -630,10 +633,10 @@
         return;
       }
       if (a === "confirm") {
-        const code = $("#doorInput").value.trim();
-        if (!/^\d{6}$/.test(code)) { toast("รหัสเปิดห้องไม่ถูกต้อง", "ต้องเป็นตัวเลข 6 หลัก"); return; }
+        const codes = $$(".doorInput", modal).map((inp) => ({ i: +inp.dataset.i, room: +inp.dataset.r, code: inp.value.trim() }));
+        if (!codes.length || codes.some((c) => !/^\d{6}$/.test(c.code))) { toast("รหัสเปิดห้องไม่ถูกต้อง", "ต้องเป็นตัวเลข 6 หลักทุกห้อง"); return; }
         btn.disabled = true;
-        try { await DB.confirm(b, code); notifyBot("confirmed", b.guestKey, { name: b.name, phone: b.phone, adults: b.adults, children: b.children, arrivalTime: b.arrivalTime, earlyCheckIn: b.earlyCheckIn, breakfastTime: b.breakfastTime, requests: b.requests, note: b.note }); toast("ยืนยันการจองแล้ว", b.code + " · ลูกค้าเห็นรหัสเปิดห้องบนหน้าเว็บแล้ว"); openBooking(b.id); }
+        try { await DB.confirm(b, codes); notifyBot("confirmed", b.guestKey, { name: b.name, phone: b.phone, adults: b.adults, children: b.children, arrivalTime: b.arrivalTime, earlyCheckIn: b.earlyCheckIn, breakfastTime: b.breakfastTime, requests: b.requests, note: b.note }); toast("ยืนยันการจองแล้ว", b.code + " · ลูกค้าเห็นรหัสเปิดห้องบนหน้าเว็บแล้ว"); openBooking(b.id); }
         catch (ex) { toast("ทำรายการไม่สำเร็จ", ex.message); btn.disabled = false; }
         return;
       }
